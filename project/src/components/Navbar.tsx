@@ -1,0 +1,181 @@
+import React, { useState, useEffect } from 'react';
+import { Menu, X, Truck, User, LogOut, Settings } from 'lucide-react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { useAuthStore } from '../store/authStore';
+import logo from '../assets/img/OR_logo_v2.png';
+
+const Navbar = () => {
+  const [isOpen, setIsOpen] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
+  const [showUserMenu, setShowUserMenu] = useState(false);
+  const location = useLocation();
+  const navigate = useNavigate();
+  const isHomePage = location.pathname === '/';
+  const { user, signOut } = useAuthStore();
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 60);
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  const handleSignOut = async () => {
+    try {
+      await signOut();
+      navigate('/');
+      setShowUserMenu(false);
+      setIsOpen(false);
+    } catch (error) {
+      console.error('Sign out error:', error);
+    }
+  };
+
+  const shouldShowTransparentNav = isHomePage && !isScrolled;
+
+  const menuItems = [
+    { label: 'Home', path: '/' },
+    { label: 'About', path: '/#about' },
+    { label: 'How It Works', path: '/#how-it-works' },
+    { label: 'Equipment', path: '/equipment' },
+    { label: 'Contact', path: '/#contact' },
+  ];
+
+  return (
+    <nav
+      className={`fixed w-full z-50 transition-all duration-300 ${
+        shouldShowTransparentNav
+          ? 'bg-transparent py-4'
+          : 'bg-white shadow-md py-2'
+      }`}
+    >
+      <div className="container mx-auto px-4">
+        <div className="flex justify-between items-center">
+          <Link to="/" className="flex items-center">
+            <img src={logo} alt="Logo" className="h-8 md:h-10" />
+          </Link>
+
+          {/* Desktop Menu */}
+          <div className="hidden md:flex items-center">
+            {menuItems.map((item) => (
+              <Link
+                key={item.path}
+                to={item.path}
+                className={`${
+                  shouldShowTransparentNav
+                    ? 'text-white hover:text-gray-200'
+                    : 'text-gray-800 hover:text-yellow-600'
+                } transition-colors`}
+              >
+                {item.label}
+              </Link>
+            ))}
+          </div>
+
+          <div className="flex items-center space-x-4">
+            {user ? (
+              <div className="relative">
+                <button
+                  onClick={() => setShowUserMenu(!showUserMenu)}
+                  className={`flex items-center space-x-2 ${
+                    shouldShowTransparentNav ? 'text-white' : 'text-gray-800'
+                  }`}
+                >
+                  <User className="h-5 w-5" />
+                </button>
+
+                {showUserMenu && (
+                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg py-1 z-50">
+                    <Link
+                      to="/dashboard"
+                      className="block px-4 py-2 text-gray-800 hover:bg-gray-100"
+                      onClick={() => setShowUserMenu(false)}
+                    >
+                      Dashboard
+                    </Link>
+                    <Link
+                      to="/profile"
+                      className="block px-4 py-2 text-gray-800 hover:bg-gray-100"
+                      onClick={() => setShowUserMenu(false)}
+                    >
+                      <Settings className="inline-block h-4 w-4 mr-2" />
+                      Profile Settings
+                    </Link>
+                    <button
+                      onClick={handleSignOut}
+                      className="block w-full text-left px-4 py-2 text-gray-800 hover:bg-gray-100"
+                    >
+                      <LogOut className="inline-block h-4 w-4 mr-2" />
+                      Sign Out
+                    </button>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <Link
+                to="/auth"
+                className={`${
+                  shouldShowTransparentNav
+                    ? 'text-white hover:text-gray-200'
+                    : 'text-gray-800 hover:text-gray-600'
+                }`}
+              >
+                Sign In
+              </Link>
+            )}
+
+            {/* Mobile Menu Button */}
+            <button
+              onClick={() => setIsOpen(!isOpen)}
+              className={`md:hidden ${
+                shouldShowTransparentNav ? 'text-white' : 'text-gray-800'
+              } focus:outline-none`}
+            >
+              {isOpen ? <X size={24} /> : <Menu size={24} />}
+            </button>
+          </div>
+        </div>
+
+        {/* Mobile Menu */}
+        {isOpen && (
+          <div className="md:hidden absolute top-full left-0 right-0 bg-white shadow-lg rounded-b-lg mt-2">
+            <div className="flex flex-col space-y-3 p-4">
+              {menuItems.map((item) => (
+                <Link
+                  key={item.path}
+                  to={item.path}
+                  className="text-gray-800 hover:text-yellow-600 transition-colors"
+                  onClick={() => setIsOpen(false)}
+                >
+                  {item.label}
+                </Link>
+              ))}
+              {user && (
+                <>
+                  <Link
+                    to="/dashboard"
+                    className="text-gray-800 hover:text-yellow-600"
+                    onClick={() => setIsOpen(false)}
+                  >
+                    Dashboard
+                  </Link>
+                  <Link
+                    to="/profile"
+                    className="text-gray-800 hover:text-yellow-600"
+                    onClick={() => setIsOpen(false)}
+                  >
+                    Profile Settings
+                  </Link>
+                </>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
+    </nav>
+  );
+};
+
+export default Navbar;
