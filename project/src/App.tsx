@@ -7,6 +7,8 @@ import {
 } from 'react-router-dom';
 import { useAuthStore } from './store/authStore';
 import { supabase } from './lib/supabase';
+import { AuthProvider } from './context/authContext';
+
 import Navbar from './components/Navbar';
 import Hero from './components/Hero';
 import About from './components/About';
@@ -49,11 +51,11 @@ function App() {
               return;
             }
 
-            if (session?.user) {
-              setUser(session.user);
-              await fetchUserRoles(session.user.id);
-            } else {
-              setUser(null);
+            if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+              if (mounted && session?.user) {
+                setUser(session.user);
+                await fetchUserRoles(session.user.id);
+              }
             }
           }
         );
@@ -63,10 +65,7 @@ function App() {
           subscription.unsubscribe();
         };
       } catch (error) {
-        console.error('Auth initialization error:', error);
-        if (mounted) {
-          setUser(null);
-        }
+        console.error('Error initializing auth:', error);
       }
     }
 
@@ -74,36 +73,42 @@ function App() {
   }, [setUser, fetchUserRoles]);
 
   return (
-    <Router>
-      <div className="font-sans">
-        <Navbar />
+    <AuthProvider>
+      <Router>
         <Routes>
-          <Route
-            path="/"
-            element={
-              <>
-                <Hero />
-                <About />
-                <HowItWorks />
-                <FeaturedEquipment />
-                <ListingCTA />
-                <Contact />
-              </>
-            }
-          />
-          <Route path="/equipment" element={<AllEquipment />} />
-          <Route path="/equipment/:id" element={<EquipmentDetails />} />
-          <Route path="/list-equipment" element={<ListEquipment />} />
+          {/* Public routes */}
+          <Route path="/" element={
+            <>
+              <Navbar />
+              <Hero />
+              <About />
+              <HowItWorks />
+              <FeaturedEquipment />
+              <ListingCTA />
+              <Contact />
+              <Footer />
+            </>
+          } />
           <Route path="/auth" element={<Auth />} />
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/renterdashboard" element={<RenterDashboard />} />
-          <Route path="/ownerdashboard" element={<OwnerDashboard />} />
+          <Route path="/equipment/:id" element={<EquipmentDetails />} />
+          <Route path="/all-equipment" element={<AllEquipment />} />
+
+          {/* Protected routes */}
+          <Route path="/list-equipment" element={<ListEquipment />} />
+          <Route path="/dashboard" element={ 
+            <>
+            <Navbar />
+            <Dashboard />
+            <Footer />  
+            </>} 
+            />
+          <Route path="/owner-dashboard" element={<OwnerDashboard />} />
+          <Route path="/renter-dashboard" element={<RenterDashboard />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
-        <Footer />
-      </div>
-    </Router>
+      </Router>
+    </AuthProvider>
   );
 }
 

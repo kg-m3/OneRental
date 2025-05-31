@@ -25,22 +25,73 @@ const Navbar = () => {
   const handleSignOut = async () => {
     try {
       await signOut();
+      // Clear auth store
+      useAuthStore.getState().setUser(null);
+      // Redirect to home page
       navigate('/');
-      setShowUserMenu(false);
-      setIsOpen(false);
+      
     } catch (error) {
       console.error('Sign out error:', error);
     }
   };
 
   const shouldShowTransparentNav = isHomePage && !isScrolled;
+  const handleScrollToSection = (sectionId: string) => {
+    // If we're not on the home page, navigate to home with hash
+    if (location.pathname !== '/') {
+      navigate(`/#${sectionId}`);
+      return;
+    }
+    // Scroll immediately if we're already on home page
+    const element = document.getElementById(sectionId);
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
+  // Handle hash changes for scrolling
+  useEffect(() => {
+    const hash = window.location.hash;
+    if (hash) {
+      const element = document.querySelector(hash);
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth' });
+      }
+    }
+  }, [location.hash]);
 
   const menuItems = [
-    { label: 'Home', path: '/' },
-    { label: 'About', path: '/#about' },
-    { label: 'How It Works', path: '/#how-it-works' },
-    { label: 'Equipment', path: '/equipment' },
-    { label: 'Contact', path: '/#contact' },
+    { 
+      label: 'Home', 
+      path: '/', 
+      onClick: () => {
+        if (location.pathname !== '/') {
+          navigate('/');
+        } else {
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+      }
+    },
+    { 
+      label: 'About', 
+      path: '/#about', 
+      onClick: () => handleScrollToSection('about') 
+    },
+    { 
+      label: 'How It Works', 
+      path: '/#how-it-works', 
+      onClick: () => handleScrollToSection('how-it-works') 
+    },
+    { 
+      label: 'Equipment', 
+      path: '/#equipment', 
+      onClick: () => handleScrollToSection('equipment') 
+    },
+    { 
+      label: 'Contact', 
+      path: '/#contact', 
+      onClick: () => handleScrollToSection('contact') 
+    },
   ];
 
   return (
@@ -53,28 +104,43 @@ const Navbar = () => {
     >
       <div className="container mx-auto px-4">
         <div className="flex justify-between items-center">
-          <Link to="/" className="flex items-center">
+          <Link 
+            to="/" 
+            onClick={() => {
+              if (location.pathname !== '/') {
+                navigate('/');
+              } else {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }
+            }} 
+            className="flex items-center"
+          >
             <img src={logo} alt="Logo" className="h-8 md:h-10" />
           </Link>
 
           {/* Desktop Menu */}
           <div className="hidden md:flex items-center">
             {menuItems.map((item) => (
-              <Link
+              <button
                 key={item.path}
-                to={item.path}
-                className={`${
-                  shouldShowTransparentNav
-                    ? 'text-white hover:text-gray-200'
-                    : 'text-gray-800 hover:text-yellow-600'
-                } transition-colors`}
+                onClick={() => {
+                  if (item.onClick) {
+                    item.onClick();
+                  } else {
+                    navigate(item.path);
+                  }
+                }}
+                className={`px-4 py-2 hover:text-yellow-600 ${
+                  shouldShowTransparentNav ? 'text-white hover:text-gray-200'
+                                          : 'text-gray-800 hover:text-yellow-600'
+                }transition-colors`}
               >
                 {item.label}
-              </Link>
+              </button>
             ))}
           </div>
 
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-4 pl-32">
             {user ? (
               <div className="relative">
                 <button
@@ -104,7 +170,10 @@ const Navbar = () => {
                       Profile Settings
                     </Link>
                     <button
-                      onClick={handleSignOut}
+                      onClick={() => {
+                        setShowUserMenu(false);
+                        handleSignOut();
+                      }}
                       className="block w-full text-left px-4 py-2 text-gray-800 hover:bg-gray-100"
                     >
                       <LogOut className="inline-block h-4 w-4 mr-2" />
@@ -120,7 +189,7 @@ const Navbar = () => {
                   shouldShowTransparentNav
                     ? 'text-white hover:text-gray-200'
                     : 'text-gray-800 hover:text-gray-600'
-                }`}
+                } transition-colors`}
               >
                 Sign In
               </Link>
@@ -143,14 +212,20 @@ const Navbar = () => {
           <div className="md:hidden absolute top-full left-0 right-0 bg-white shadow-lg rounded-b-lg mt-2">
             <div className="flex flex-col space-y-3 p-4">
               {menuItems.map((item) => (
-                <Link
+                <button
                   key={item.path}
-                  to={item.path}
-                  className="text-gray-800 hover:text-yellow-600 transition-colors"
-                  onClick={() => setIsOpen(false)}
+                  onClick={() => {
+                    if (item.onClick) {
+                      item.onClick();
+                    } else {
+                      navigate(item.path);
+                    }
+                    setIsOpen(false);
+                  }}
+                  className="text-gray-800 hover:text-yellow-600"
                 >
                   {item.label}
-                </Link>
+                </button>
               ))}
               {user && (
                 <>

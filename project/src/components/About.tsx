@@ -94,8 +94,8 @@ const About = () => {
           </h2>
           <p className="text-lg text-gray-600 max-w-4xl mx-auto mb-12">
             We are a digital platform dedicated to bridging the gap between
-            heavy-duty construction machinery owners and those who need reliable
-            equipment for their projects. From contractors and construction
+            heavy-duty machinery owners and those who need reliable
+            equipment for their projects. From contractors and
             companies to individuals tackling large-scale tasks, we make it easy
             to access the right machinery—when and where it's needed.
           </p>
@@ -150,24 +150,24 @@ const About = () => {
             ></div>
 
             <h3 className="text-2xl font-bold text-gray-800">
-              Redefining Equipment Access in Construction
+              Redefining Equipment Access Across Industries
             </h3>
             <p className="text-gray-600">
-              In South Africa’s fast-paced construction space, access to the
-              right machinery can make or break a project. But far too often,
-              valuable equipment sits unused while contractors scramble to find
-              reliable rentals.
+              In today’s fast-moving industries, from agriculture to logistics and
+              infrastructure, access to the right equipment can determine the success
+              of a project. Yet too often, valuable machinery remains idle while businesses
+              struggle to secure reliable rentals.
             </p>
             <p className="text-gray-600">
-              Our platform was created to change that. We connect equipment
-              owners—who are often small businesses—with those who need
-              machinery on demand. The result? More projects completed on time,
-              fewer delays, and better income streams for local operators.
+              Our platform was built to solve this challenge. We connect equipment
+              owners—many of whom are small and medium enterprises—with businesses
+              and individuals who need machinery on demand. The result? Increased
+              uptime, reduced project delays, and new income opportunities for local operators.
             </p>
             <p className="text-gray-600">
-              This isn’t just about rentals—it’s about building a network that
-              empowers builders, improves resource efficiency, and drives
-              progress in the construction industry.
+              This isn’t just about rentals—it’s about creating a connected 
+              ecosystem that empowers businesses, optimizes resources, and drives
+              progress across sectors.
             </p>
             <div>
               <a

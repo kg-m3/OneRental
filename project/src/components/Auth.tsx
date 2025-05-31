@@ -1,12 +1,14 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Mail, Lock, Loader, UserCircle } from 'lucide-react';
+import { Mail, Lock, Loader, UserCircle, Building } from 'lucide-react';
 import { useAuthStore } from '../store/authStore';
 
 const Auth = () => {
   const [isSignIn, setIsSignIn] = useState(true);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [name, setName] = useState('');
+  const [companyName, setCompanyName] = useState('');
   const [selectedRoles, setSelectedRoles] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -27,7 +29,7 @@ const Auth = () => {
         if (selectedRoles.length === 0) {
           throw new Error('Please select at least one role');
         }
-        await signUp(email, password, selectedRoles);
+        await signUp(email, password, name, companyName, selectedRoles);
         navigate('/dashboard');
       }
     } catch (err) {
@@ -102,36 +104,76 @@ const Auth = () => {
             </div>
 
             {!isSignIn && (
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  <UserCircle className="inline-block h-5 w-5 mr-1" />
-                  Select Account Type(s)
-                </label>
-                <div className="grid grid-cols-2 gap-4">
-                  <button
-                    type="button"
-                    onClick={() => toggleRole('renter')}
-                    className={`p-4 border rounded-lg text-center transition-colors ${
-                      selectedRoles.includes('renter')
-                        ? 'border-yellow-500 bg-yellow-50 text-yellow-700'
-                        : 'border-gray-300 hover:border-yellow-500'
-                    }`}
-                  >
-                    <h3 className="font-semibold">Renter</h3>
-                    <p className="text-sm text-gray-500">Browse and rent equipment</p>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => toggleRole('owner')}
-                    className={`p-4 border rounded-lg text-center transition-colors ${
-                      selectedRoles.includes('owner')
-                        ? 'border-yellow-500 bg-yellow-50 text-yellow-700'
-                        : 'border-gray-300 hover:border-yellow-500'
-                    }`}
-                  >
-                    <h3 className="font-semibold">Owner</h3>
-                    <p className="text-sm text-gray-500">List and manage equipment</p>
-                  </button>
+              <div className="space-y-4">
+                <div>
+                  <label htmlFor="name" className="sr-only">Full Name</label>
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <UserCircle className="h-5 w-5 text-gray-400" />
+                    </div>
+                    <input
+                      id="name"
+                      name="name"
+                      type="text"
+                      required
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      className="appearance-none relative block w-full px-3 py-2 pl-10 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-lg focus:outline-none focus:ring-yellow-500 focus:border-yellow-500 focus:z-10 sm:text-sm"
+                      placeholder="Full Name"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label htmlFor="company-name" className="sr-only">Company Name</label>
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <Building className="h-5 w-5 text-gray-400" />
+                    </div>
+                    <input
+                      id="company-name"
+                      name="company-name"
+                      type="text"
+                      required
+                      value={companyName}
+                      onChange={(e) => setCompanyName(e.target.value)}
+                      className="appearance-none relative block w-full px-3 py-2 pl-10 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-lg focus:outline-none focus:ring-yellow-500 focus:border-yellow-500 focus:z-10 sm:text-sm"
+                      placeholder="Company Name"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <UserCircle className="inline-block h-5 w-5 mr-1" />
+                    Select Account Type(s)
+                  </label>
+                  <div className="grid grid-cols-2 gap-4">
+                    <button
+                      type="button"
+                      onClick={() => toggleRole('renter')}
+                      className={`p-4 border rounded-lg text-center transition-colors ${
+                        selectedRoles.includes('renter')
+                          ? 'border-yellow-500 bg-yellow-50 text-yellow-700'
+                          : 'border-gray-300 hover:border-yellow-500'
+                      }`}
+                    >
+                      <h3 className="font-semibold">Renter</h3>
+                      <p className="text-sm text-gray-500">Browse and rent equipment</p>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => toggleRole('owner')}
+                      className={`p-4 border rounded-lg text-center transition-colors ${
+                        selectedRoles.includes('owner')
+                          ? 'border-yellow-500 bg-yellow-50 text-yellow-700'
+                          : 'border-gray-300 hover:border-yellow-500'
+                      }`}
+                    >
+                      <h3 className="font-semibold">Owner</h3>
+                      <p className="text-sm text-gray-500">List and manage equipment</p>
+                    </button>
+                  </div>
                 </div>
               </div>
             )}

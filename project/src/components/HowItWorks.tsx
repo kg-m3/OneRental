@@ -8,7 +8,7 @@ const HowItWorks = () => {
       icon: <Search className="h-10 w-10 text-yellow-600" />,
       title: '1. Browse Equipment',
       description:
-        'Explore available construction machinery by type, location, and availability.',
+        'Explore available machinery by type, location, and availability.',
     },
     {
       icon: <BookOpen className="h-10 w-10 text-yellow-600" />,

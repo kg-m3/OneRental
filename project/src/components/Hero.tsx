@@ -26,7 +26,7 @@ const Hero = () => {
       <div className="container mx-auto px-4 relative z-10 text-center">
         <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-6 leading-tight">
           <span className="inline-block transform transition-transform duration-700 ease-in-out hover:scale-105">
-            Building Big. Build Smart.
+            Build Big. Build Smart.
           </span>{' '}
           <br />
           <span className="inline-block transform transition-transform duration-700 ease-in-out hover:scale-105">
@@ -40,7 +40,7 @@ const Hero = () => {
           </span>
         </h1>
         <p className="text-xl md:text-2xl text-gray-200 mb-10 max-w-3xl mx-auto">
-          South Africa's premier platform connecting construction equipment
+          South Africa's premier platform connecting equipment
           owners with those who need reliable machinery
         </p>
       </div>

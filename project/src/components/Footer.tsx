@@ -14,7 +14,7 @@ const Footer = () => {
   return (
     <footer className="bg-gray-900 text-white">
       <div className="container mx-auto px-4 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {/* Company Info */}
           <div>
             <div className="flex items-center mb-4">
@@ -51,6 +51,31 @@ const Footer = () => {
                 <Linkedin className="h-5 w-5" />
               </a>
             </div>
+          </div>
+
+          {/* Contact Info */}
+          <div>
+            <h3 className="text-lg font-semibold mb-4 border-b border-gray-700 pb-2">
+              Contact Us
+            </h3>
+            <ul className="space-y-3">
+              <li className="flex items-start">
+                <MapPin className="h-5 w-5 text-yellow-500 mr-2 mt-0.5" />
+                <span className="text-gray-400">
+                  123 Construction Road
+                  <br />
+                  Johannesburg, South Africa
+                </span>
+              </li>
+              <li className="flex items-center">
+                <Phone className="h-5 w-5 text-yellow-500 mr-2" />
+                <span className="text-gray-400">+27 12 345 6789</span>
+              </li>
+              <li className="flex items-center">
+                <Mail className="h-5 w-5 text-yellow-500 mr-2" />
+                <span className="text-gray-400">info@onerental.co.za</span>
+              </li>
+            </ul>
           </div>
 
           {/* Quick Links */}
@@ -100,54 +125,6 @@ const Footer = () => {
                 </a>
               </li>
             </ul>
-          </div>
-
-          {/* Contact Info */}
-          <div>
-            <h3 className="text-lg font-semibold mb-4 border-b border-gray-700 pb-2">
-              Contact Us
-            </h3>
-            <ul className="space-y-3">
-              <li className="flex items-start">
-                <MapPin className="h-5 w-5 text-yellow-500 mr-2 mt-0.5" />
-                <span className="text-gray-400">
-                  123 Construction Road
-                  <br />
-                  Johannesburg, South Africa
-                </span>
-              </li>
-              <li className="flex items-center">
-                <Phone className="h-5 w-5 text-yellow-500 mr-2" />
-                <span className="text-gray-400">+27 12 345 6789</span>
-              </li>
-              <li className="flex items-center">
-                <Mail className="h-5 w-5 text-yellow-500 mr-2" />
-                <span className="text-gray-400">info@onerental.co.za</span>
-              </li>
-            </ul>
-          </div>
-
-          {/* Newsletter */}
-          <div>
-            <h3 className="text-lg font-semibold mb-4 border-b border-gray-700 pb-2">
-              Newsletter
-            </h3>
-            <p className="text-gray-400 mb-4">
-              Subscribe to our newsletter for the latest updates and offers.
-            </p>
-            <form className="flex">
-              <input
-                type="email"
-                placeholder="Your Email"
-                className="px-4 py-2 w-full bg-gray-800 border border-gray-700 rounded-l-lg focus:outline-none focus:ring-1 focus:ring-yellow-500"
-              />
-              <button
-                type="submit"
-                className="px-4 py-2 bg-yellow-600 text-white rounded-r-lg hover:bg-yellow-700 transition-colors"
-              >
-                Subscribe
-              </button>
-            </form>
           </div>
         </div>
 

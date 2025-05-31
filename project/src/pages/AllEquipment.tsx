@@ -1,83 +1,79 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Search, Filter, MapPin } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { supabase } from '../lib/supabase';
+
+interface EquipmentItem {
+  id: number;
+  title: string;
+  description: string;
+  type: string;
+  location: string;
+  rate: string;
+  status: string;
+  images: {
+    id: string;
+    image_url: string;
+    is_main: boolean;
+  }[];
+};
 
 const AllEquipment = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedType, setSelectedType] = useState('All');
+  const [equipment, setEquipment] = useState<EquipmentItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
-  const equipmentData = [
-    {
-      id: 1,
-      title: 'CAT 320 Excavator',
-      description: 'Perfect for digging, trenching, and demolition jobs.',
-      image:
-        'https://images.unsplash.com/photo-1610477865545-37711c53144d?q=80&w=2047&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
-      type: 'Excavator',
-      location: 'Johannesburg',
-      rate: '4,500',
-      availability: 'Available Now',
-    },
-    {
-      id: 2,
-      title: 'Komatsu D61 Bulldozer',
-      description: 'Ideal for heavy pushing and clearing operations.',
-      image:
-        'https://images.unsplash.com/photo-1630288214032-2c4cc2c080ca?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8QnVsbGRvemVyfGVufDB8fDB8fHww',
-      type: 'Bulldozer',
-      location: 'Cape Town',
-      rate: '5,200',
-      availability: 'Available Now',
-    },
-    {
-      id: 3,
-      title: 'Liebherr Tower Crane',
-      description: 'Heavy lifting made easy. Great for vertical builds.',
-      image:
-        'https://images.unsplash.com/photo-1539269071019-8bc6d57b0205?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
-      type: 'Crane',
-      location: 'Durban',
-      rate: '7,800',
-      availability: 'Available in 3 days',
-    },
-    {
-      id: 4,
-      title: 'JCB 3CX Backhoe Loader',
-      description: 'Versatile machine for digging and loading operations.',
-      image:
-        'https://images.unsplash.com/photo-1646297970360-94c9f6d8903c?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
-      type: 'Loader',
-      location: 'Pretoria',
-      rate: '3,800',
-      availability: 'Available Now',
-    },
-    {
-      id: 5,
-      title: 'Volvo A40G Articulated Hauler',
-      description: 'Efficient material transport for large construction sites.',
-      image:
-        'https://images.unsplash.com/photo-1629807472592-2649bfa09f9c?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8ZHVtcCUyMHRydWNrfGVufDB8fDB8fHww',
-      type: 'Hauler',
-      location: 'Port Elizabeth',
-      rate: '6,500',
-      availability: 'Available Tomorrow',
-    },
-    {
-      id: 6,
-      title: 'CAT 2460 Skid Steer',
-      description: 'Compact and versatile for various construction tasks.',
-      image:
-        'https://images.pexels.com/photos/8808933/pexels-photo-8808933.jpeg?auto=compress&cs=tinysrgb&w=600https://images.pexels.com/photos/8808933/pexels-photo-8808933.jpeg?auto=compress&cs=tinysrgb&w=600',
-      type: 'Skid Steer',
-      location: 'Bloemfontein',
-      rate: '2,800',
-      availability: 'Available Now',
-    },
-  ];
+  useEffect(() => {
+    fetchEquipment();
+  }, []);
 
-  const types = ['All', ...new Set(equipmentData.map((item) => item.type))];
+  const fetchEquipment = async () => {
+    try {
+      setLoading(true);
+      setError('');
+      
+      const { data: equipmentData, error: equipmentError } = await supabase
+        .from('equipment')
+        .select('*')
+        .order('created_at', { ascending: false });
 
-  const filteredEquipment = equipmentData.filter((item) => {
+      if (equipmentError) throw equipmentError;
+      
+      if (equipmentData) {
+        const equipmentWithImages = await Promise.all(
+          equipmentData.map(async (item) => {
+            const { data: images, error: imagesError } = await supabase
+              .from('equipment_images')
+              .select('*')
+              .eq('equipment_id', item.id)
+              .order('is_main', { ascending: false });
+
+            if (imagesError) {
+              console.error(`Error fetching images for equipment ${item.id}:`, imagesError);
+              return { ...item, images: [] };
+            }
+
+            return { ...item, images };
+          })
+        );
+
+        setEquipment(equipmentWithImages);
+      }
+    } catch (err) {
+      setError('Failed to fetch equipment data');
+      console.error('Error fetching equipment:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+
+
+  const types = ['All', ...new Set(equipment.map((item) => item.type))];
+
+  const filteredEquipment = equipment.filter((item) => {
     const matchesSearch =
       item.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       item.description.toLowerCase().includes(searchTerm.toLowerCase());
@@ -130,12 +126,17 @@ const AllEquipment = () => {
             >
               <div className="relative">
                 <img
-                  src={item.image}
+                  src={item.images?.find(img => img.is_main)?.image_url || ''}
                   alt={item.title}
                   className="w-full h-60 object-cover"
                 />
-                <div className="absolute top-4 right-4 bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-medium">
-                  {item.availability}
+                <div 
+                    className={`absolute top-4 right-4 px-3 py-1 rounded-full text-sm font-medium ${
+                      item.status === 'available' ? 'bg-green-100 text-green-800' :
+                      item.status === 'inactive' ? 'bg-yellow-100 text-yellow-800' :
+                    'bg-gray-100 text-gray-800'
+                  }`}>
+                  {item.status}
                 </div>
               </div>
 

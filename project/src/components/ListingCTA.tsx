@@ -13,7 +13,7 @@ const ListingCTA = () => {
 
       <div className="container mx-auto px-4 relative z-10">
         <div className="text-center mb-12">
-          <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">Own Construction Equipment? Start Earning</h2>
+          <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">Own Equipment? Start Earning</h2>
           <p className="text-xl text-white/90 max-w-3xl mx-auto">
             Got machinery sitting idle? Put it to work and earn passive income. List it for free and get connected to verified renters.
           </p>

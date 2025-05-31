@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { User, Mail, Phone, Building, Upload, Shield, X } from 'lucide-react';
+import { User, Mail, Phone, Building, Upload, Shield, X, Loader } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useAuthStore } from '../store/authStore';
 
@@ -17,6 +17,12 @@ const Profile = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [termsAccepted, setTermsAccepted] = useState(false);
+  const [verificationData, setVerificationData] = useState({
+    company_reg_number: '',
+    id_document: null,
+    address_proof: null,
+  });
 
   useEffect(() => {
     if (user) {
@@ -41,6 +47,7 @@ const Profile = () => {
           company_name: data.company_name || '',
           profile_image_url: data.profile_image_url || '',
         });
+        setTermsAccepted(data.terms_accepted || false);
       }
     } catch (error) {
       console.error('Error fetching profile:', error);
@@ -107,6 +114,78 @@ const Profile = () => {
     } catch (error) {
       console.error('Error uploading image:', error);
       setError('Failed to upload image. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleAcceptTerms = async () => {
+    try {
+      setLoading(true);
+      const { error } = await supabase
+        .from('user_profiles')
+        .update({ terms_accepted: true, terms_accepted_at: new Date().toISOString() })
+        .eq('user_id', user?.id);
+
+      if (error) throw error;
+      setSuccess('Terms and conditions accepted successfully');
+      setTermsAccepted(true);
+    } catch (error) {
+      console.error('Error accepting terms:', error);
+      setError('Failed to accept terms and conditions');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleVerificationSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      setLoading(true);
+      
+      // Handle file uploads
+      const formData = new FormData();
+      formData.append('company_reg_number', verificationData.company_reg_number);
+      if (verificationData.id_document) {
+        formData.append('id_document', verificationData.id_document);
+      }
+      if (verificationData.address_proof) {
+        formData.append('address_proof', verificationData.address_proof);
+      }
+
+      const { error } = await supabase
+        .from('user_verifications')
+        .insert({
+          user_id: user?.id,
+          company_reg_number: verificationData.company_reg_number,
+          id_document_url: '', // Will be updated after upload
+          address_proof_url: '', // Will be updated after upload
+          status: 'pending',
+          submitted_at: new Date().toISOString(),
+        });
+
+      if (error) throw error;
+      
+      // Handle file uploads to Supabase storage
+      if (verificationData.id_document) {
+        const { error: idError } = await supabase.storage
+          .from('verification-documents')
+          .upload(`id_${user?.id}_${Date.now()}`, verificationData.id_document);
+        if (idError) throw idError;
+      }
+
+      if (verificationData.address_proof) {
+        const { error: addressError } = await supabase.storage
+          .from('verification-documents')
+          .upload(`address_${user?.id}_${Date.now()}`, verificationData.address_proof);
+        if (addressError) throw addressError;
+      }
+
+      setSuccess('Verification documents submitted successfully');
+      setIsVerifying(false);
+    } catch (error) {
+      console.error('Error verifying account:', error);
+      setError('Failed to submit verification documents');
     } finally {
       setLoading(false);
     }
@@ -218,7 +297,7 @@ const Profile = () => {
                     <>
                       <button
                         type="button"
-                        onClick={() => setIsEditing(false)}
+                        onClick={() => {setIsEditing(false);setLoading(false);}}
                         className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
                       >
                         Cancel
@@ -228,7 +307,13 @@ const Profile = () => {
                         disabled={loading}
                         className="px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700"
                       >
-                        {loading ? 'Saving...' : 'Save Changes'}
+                       {loading ? (
+                        <>
+                          <Loader className="h-5 w-5 animate-spin mr-2" />
+                        </>
+                      ) : (
+                        'Save Changes'
+                      )}
                       </button>
                     </>
                   ) : (
@@ -242,6 +327,56 @@ const Profile = () => {
                   )}
                 </div>
               </form>
+
+              {/* Terms and Conditions Section */}
+              <div className="mt-8">
+                <h2 className="text-xl font-semibold mb-4">Terms and Conditions</h2>
+                <div className="bg-gray-50 p-6 rounded-lg">
+                  <div className="mb-4">
+                    <p className="text-gray-600">
+                      By accepting these terms and conditions, you agree to:
+                    </p>
+                    <ul className="list-disc list-inside mt-2 space-y-2 text-gray-600">
+                      <li>Comply with all rental agreements and policies</li>
+                      <li>Use equipment only for intended purposes</li>
+                      <li>Return equipment in good condition</li>
+                      <li>Follow all safety guidelines</li>
+                      <li>Report any issues promptly</li>
+                    </ul>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      id="terms"
+                      checked={termsAccepted}
+                      onChange={() => setTermsAccepted(!termsAccepted)}
+                      className="w-4 h-4 text-yellow-600 focus:ring-yellow-500"
+                      disabled={loading}
+                    />
+                    <label htmlFor="terms" className="text-sm text-gray-700">
+                      I have read and agree to the terms and conditions
+                    </label>
+                  </div>
+                  {!termsAccepted ? (
+                    <button
+                      onClick={handleAcceptTerms}
+                      disabled={loading}
+                      className="mt-4 px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {loading ? (
+                        <>
+                          <Loader className="h-5 w-5 animate-spin mr-2" />
+                          Accepting...
+                        </>
+                      ) : (
+                        'Accept Terms'
+                      )}
+                    </button>
+                  ) : (
+                    <p className="mt-4 text-green-600">Terms and conditions accepted</p>
+                  )}
+                </div>
+              </div>
 
               {/* Verification Section */}
               <div className="mt-8 pt-8 border-t">
@@ -276,11 +411,26 @@ const Profile = () => {
                 <X className="h-6 w-6" />
               </button>
             </div>
-            <div className="p-6">
+            <form onSubmit={handleVerificationSubmit} className="p-6">
               <p className="text-gray-600 mb-4">
-                To verify your account, please upload the following documents:
+                To verify your account, please provide the following information:
               </p>
               <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Company Registration Number
+                  </label>
+                  <input
+                    type="text"
+                    value={verificationData.company_reg_number}
+                    onChange={(e) => setVerificationData(prev => ({
+                      ...prev,
+                      company_reg_number: e.target.value
+                    }))}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg"
+                    required
+                  />
+                </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Government-issued ID
@@ -288,7 +438,12 @@ const Profile = () => {
                   <input
                     type="file"
                     accept="image/*,.pdf"
+                    onChange={(e) => setVerificationData(prev => ({
+                      ...prev,
+                      id_document: e.target.files?.[0]
+                    }))}
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg"
+                    required
                   />
                 </div>
                 <div>
@@ -298,17 +453,32 @@ const Profile = () => {
                   <input
                     type="file"
                     accept="image/*,.pdf"
+                    onChange={(e) => setVerificationData(prev => ({
+                      ...prev,
+                      address_proof: e.target.files?.[0]
+                    }))}
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg"
+                    required
                   />
                 </div>
-                <button
-                  type="button"
-                  className="w-full px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700"
-                >
-                  Submit for Verification
-                </button>
+                <div className="mt-4">
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="w-full px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {loading ? (
+                      <>
+                        <Loader className="h-5 w-5 animate-spin mr-2" />
+                        Submitting...
+                      </>
+                    ) : (
+                      'Submit Verification'
+                    )}
+                  </button>
+                </div>
               </div>
-            </div>
+            </form>
           </div>
         </div>
       )}

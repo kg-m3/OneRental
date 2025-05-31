@@ -59,7 +59,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     }
   },
 
-  signUp: async (email, password, roles) => {
+  signUp: async (email, password, name, company_name, roles) => {
     try {
       set({ isLoading: true });
       const { data, error: signUpError } = await supabase.auth.signUp({
@@ -75,6 +75,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         .insert([{ 
           user_id: data.user.id,
           email,
+          full_name: name,
+          company_name: company_name,
           created_at: new Date().toISOString(),
         }]);
 

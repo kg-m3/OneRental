@@ -1,16 +1,26 @@
 import React, { useState } from 'react';
+import { supabase } from '../lib/supabase';
 import { Upload, MapPin, DollarSign, PenTool as Tool, Info } from 'lucide-react';
+import { useAuth } from '../context/authContext';
+import { Navigate } from 'react-router-dom';
 
 const ListEquipment = () => {
+  const { user } = useAuth();
+  
+  console.log(user);
+  if (!user) {
+    console.log(user);
+    // return <Navigate to="/login" />;
+  }
   const [formData, setFormData] = useState({
     title: '',
     type: '',
     description: '',
     location: '',
     rate: '',
-    features: [''],
+    // features: [''],
     images: [] as string[],
-    availability: 'Available Now'
+    status: 'Available'
   });
 
   const equipmentTypes = [
@@ -26,20 +36,20 @@ const ListEquipment = () => {
     'Other'
   ];
 
-  const handleFeatureChange = (index: number, value: string) => {
-    const newFeatures = [...formData.features];
-    newFeatures[index] = value;
-    setFormData({ ...formData, features: newFeatures });
-  };
+  // const handleFeatureChange = (index: number, value: string) => {
+  //   const newFeatures = [...formData.features];
+  //   newFeatures[index] = value;
+  //   setFormData({ ...formData, features: newFeatures });
+  // };
 
-  const addFeature = () => {
-    setFormData({ ...formData, features: [...formData.features, ''] });
-  };
+  // const addFeature = () => {
+  //   setFormData({ ...formData, features: [...formData.features, ''] });
+  // };
 
-  const removeFeature = (index: number) => {
-    const newFeatures = formData.features.filter((_, i) => i !== index);
-    setFormData({ ...formData, features: newFeatures });
-  };
+  // const removeFeature = (index: number) => {
+  //   const newFeatures = formData.features.filter((_, i) => i !== index);
+  //   setFormData({ ...formData, features: newFeatures });
+  // };
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
@@ -49,11 +59,59 @@ const ListEquipment = () => {
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Here you would typically send the form data to your backend
-    console.log('Form submitted:', formData);
-    alert('Equipment listing submitted successfully!');
+    
+    try {
+      const { data, error } = await supabase
+        .from('equipment')
+        .insert({
+          title: formData.title,
+          type: formData.type,
+          description: formData.description,
+          location: formData.location,
+          rate: formData.rate,
+          // features: formData.features.filter(f => f.trim() !== ''),
+          status: formData.status,
+          owner_id: user.id // Add owner_id to link equipment to user
+        }).select();
+
+      if (error) throw error;
+      console.log(data);
+      
+      // Upload additional images if any
+      if (formData.images.length > 0 ) {
+        const additionalImages = formData.images.slice(1);
+        for (const image of formData.images) {
+          const imagesResult = await supabase  
+            .from('equipment_images')
+            .insert({
+              equipment_id: data?.[0].id,
+              image_url: image,
+              is_main: image === formData.images[0]
+            });
+
+            if (imagesResult.error) {
+              throw new Error('Failed to upload image');
+            }
+        }
+      }
+
+      alert('Equipment listing submitted successfully!');
+      setFormData({
+        title: '',
+        type: '',
+        description: '',
+        location: '',
+        rate: '',
+        // features: [''],
+        images: [],
+        status: 'Available'
+      });
+    } catch (err) {
+      console.error('Error submitting equipment:', err);
+      alert('Failed to submit equipment listing. Please try again.');
+    }
   };
 
   return (
@@ -158,7 +216,7 @@ const ListEquipment = () => {
             </div>
 
             {/* Features */}
-            <div className="bg-white p-6 rounded-lg shadow-lg">
+            {/* <div className="bg-white p-6 rounded-lg shadow-lg">
               <h2 className="text-xl font-semibold mb-4">
                 <Tool className="inline-block h-5 w-5 mr-2" />
                 Features & Specifications
@@ -193,7 +251,7 @@ const ListEquipment = () => {
                   + Add Feature
                 </button>
               </div>
-            </div>
+            </div> */}
 
             {/* Images */}
             <div className="bg-white p-6 rounded-lg shadow-lg">
