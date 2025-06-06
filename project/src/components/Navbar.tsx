@@ -185,13 +185,12 @@ const Navbar = () => {
             ) : (
               <Link
                 to="/auth"
-                className={`flex items-center space-x-1.5 ${
+                className={`flex items-center space-x-0.5 ${
                   shouldShowTransparentNav
                     ? 'text-white hover:text-gray-200'
                     : 'text-gray-800 hover:text-gray-600'
-                } transition-colors text-sm md:text-base`}
+                } transition-colors text-xs sm:text-sm md:text-base whitespace-nowrap`}
               >
-               
                 Sign In
               </Link>
             )}
