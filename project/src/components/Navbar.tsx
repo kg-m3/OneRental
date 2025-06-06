@@ -185,12 +185,13 @@ const Navbar = () => {
             ) : (
               <Link
                 to="/auth"
-                className={`${
+                className={`flex items-center space-x-1.5 ${
                   shouldShowTransparentNav
                     ? 'text-white hover:text-gray-200'
                     : 'text-gray-800 hover:text-gray-600'
-                } transition-colors`}
+                } transition-colors text-sm md:text-base`}
               >
+               
                 Sign In
               </Link>
             )}
@@ -227,7 +228,7 @@ const Navbar = () => {
                   {item.label}
                 </button>
               ))}
-              {user && (
+              {/* {user && (
                 <>
                   <Link
                     to="/dashboard"
@@ -244,7 +245,7 @@ const Navbar = () => {
                     Profile Settings
                   </Link>
                 </>
-              )}
+              )} */}
             </div>
           </div>
         )}
