@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Package, Calendar, Trash2, AlertTriangle, DollarSign, Clock, CheckCircle, XCircle, Plus, Settings, User, Edit, Power, Circle as CircleX, CheckCircle as CircleCheck, Eye, Calendar as CalendarIcon, MapPin, Phone, Mail } from 'lucide-react';
+import { Package, Calendar, Trash2, AlertTriangle, DollarSign, Clock, CheckCircle, XCircle, Plus, Settings, User, Edit, Power, Circle as CircleX, CheckCircle as CircleCheck, Eye, Calendar as CalendarIcon, MapPin, Phone, Mail, Filter } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { format, parseISO, isWithinInterval } from 'date-fns';
 import DatePicker from 'react-datepicker';
@@ -93,6 +93,7 @@ const OwnerDashboard = () => {
     activeBookings: 0,
     totalBookings: 0,
   });
+  const [isFilterMenuOpen, setIsFilterMenuOpen] = useState(false);
 
   const handleEditEquipment = (equipment: Equipment) => {
     setSelectedEquipment(equipment);
@@ -438,10 +439,12 @@ const OwnerDashboard = () => {
               <h2 className="text-xl font-bold">My Equipment</h2>
               <Link
                 to="/list-equipment"
-                className="flex items-center px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition-colors"
+                className="flex items-center px-3 py-1.5 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition-colors md:px-4 md:py-2"
               >
-                <Plus className="h-5 w-5 mr-2" />
-                Add New Equipment
+                <Plus className="h-4 w-4 md:h-5 md:w-5" />
+                <span className="hidden md:inline ml-2 text-sm md:text-base">
+                  Add New Equipment
+                </span>
               </Link>
             </div>
 
@@ -516,7 +519,89 @@ const OwnerDashboard = () => {
               <h2 className="text-xl font-bold">Rental Requests</h2>
 
               <div className="mb-6">
-                <div className="flex items-center">
+                {/* Mobile Filter Menu */}
+                <div className="md:hidden">
+                  <button
+                    onClick={() => setIsFilterMenuOpen(!isFilterMenuOpen)}
+                    className="flex items-center px-4 py-2 bg-white border rounded-lg hover:bg-gray-50"
+                  >
+                    <Filter className="w-5 h-5 mr-2" />
+                    <span>Filters</span>
+                  </button>
+                  
+                  {isFilterMenuOpen && (
+                    <div className="mt-2 p-4 bg-white rounded-lg shadow-md border">
+                      <div className="space-y-4">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">Date Range</label>
+                          <div className="flex space-x-4">
+                            <div className="flex-1">
+                              <DatePicker
+                                selected={startDate}
+                                onChange={(date) => setStartDate(date)}
+                                selectsStart
+                                startDate={startDate}
+                                endDate={endDate}
+                                placeholderText="Start Date"
+                                dateFormat="yyyy-MM-dd"
+                                className="w-full p-2 border rounded-lg"
+                              />
+                            </div>
+                            <div className="flex-1">
+                              <DatePicker
+                                selected={endDate}
+                                onChange={(date) => setEndDate(date)}
+                                selectsEnd
+                                startDate={startDate}
+                                endDate={endDate}
+                                placeholderText="End Date"
+                                dateFormat="yyyy-MM-dd"
+                                className="w-full p-2 border rounded-lg"
+                              />
+                            </div>
+                          </div>
+                        </div>
+                        
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
+                          <select
+                            className="w-full p-2 border rounded-lg"
+                            value={selectedStatus}
+                            onChange={(e) => setSelectedStatus(e.target.value)}
+                          >
+                            <option value="all">All Requests</option>
+                            <option value="pending">Pending</option>
+                            <option value="approved">Approved</option>
+                            <option value="declined">Declined</option>
+                          </select>
+                        </div>
+                        
+                        <div className="flex justify-end space-x-2">
+                          <button
+                            onClick={() => setIsFilterMenuOpen(false)}
+                            className="px-4 py-2 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200"
+                          >
+                            Cancel
+                          </button>
+                          <button
+                            onClick={() => {
+                              setStartDate(null);
+                              setEndDate(null);
+                              setSelectedStatus('all');
+                              setIsFilterMenuOpen(false);
+                            }}
+                            className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600"
+                          >
+                            Clear All
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Desktop Filters */}
+                <div className="hidden md:flex items-center space-x-4">
                   <div className="w-64">
                     <DatePicker
                       selected={startDate}
@@ -541,19 +626,18 @@ const OwnerDashboard = () => {
                       className="w-full p-2 border rounded-lg"
                     />
                   </div>
-
                   <div className="w-64">
-                <select
-                  className="p-2 border rounded-lg"
-                  value={selectedStatus}
-                  onChange={(e) => setSelectedStatus(e.target.value)}
-                >
-                  <option value="all">All Requests</option>
-                  <option value="pending">Pending</option>
-                  <option value="approved">Approved</option>
-                  <option value="declined">Declined</option>
-                </select>
-              </div>
+                    <select
+                      className="p-2 border rounded-lg"
+                      value={selectedStatus}
+                      onChange={(e) => setSelectedStatus(e.target.value)}
+                    >
+                      <option value="all">All Requests</option>
+                      <option value="pending">Pending</option>
+                      <option value="approved">Approved</option>
+                      <option value="declined">Declined</option>
+                    </select>
+                  </div>
                   <button
                     onClick={() => {
                       setStartDate(null);
@@ -571,6 +655,7 @@ const OwnerDashboard = () => {
                   className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500"
                   value={selectedStatus}
                   onChange={(e) => setSelectedStatus(e.target.value)}
+{{ ... }}
                 >
                   <option value="all">All Requests</option>
                   <option value="pending">Pending</option>
@@ -584,16 +669,16 @@ const OwnerDashboard = () => {
               <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50">
                   <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sm:px-6">
                       Renter
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sm:px-6">
                       Equipment
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sm:px-6">
                       Dates
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sm:px-6">
                       Status
                     </th>
                   </tr>
@@ -761,7 +846,7 @@ const OwnerDashboard = () => {
       {/* Equipment Edit Modal */}
       {isEditModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white w-full max-w-md rounded-lg shadow-xl p-6 relative">
+           <div className="bg-white w-full max-w-md rounded-lg shadow-xl p-6 relative max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-xl font-bold">Edit Equipment</h2>
               <button

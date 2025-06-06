@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Filter, MapPin } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Search, Filter, MapPin, ArrowLeft } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 
 interface EquipmentItem {
@@ -19,6 +19,7 @@ interface EquipmentItem {
 };
 
 const AllEquipment = () => {
+  const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedType, setSelectedType] = useState('All');
   const [equipment, setEquipment] = useState<EquipmentItem[]>([]);
@@ -84,6 +85,10 @@ const AllEquipment = () => {
   return (
     <div className="min-h-screen bg-gray-50 pt-20">
       <div className="container mx-auto px-4 py-8">
+        <button onClick={() => navigate(-1)} className="inline-flex items-center text-gray-600 hover:text-yellow-600 mb-6">
+          <ArrowLeft className="h-5 w-5 mr-2" />
+          Back
+        </button>
         <div className="flex flex-col md:flex-row justify-between items-center mb-8">
           <h1 className="text-3xl font-bold text-gray-800 mb-4 md:mb-0">
             Available Equipment

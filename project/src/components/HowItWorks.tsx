@@ -57,7 +57,7 @@ const HowItWorks = () => {
 
         <div className="text-center mt-12">
           <Link
-            to="/equipment"
+            to="/all-equipment"
             className="px-8 py-3 border-2 border-yellow-600 text-yellow-600 rounded-lg font-semibold transition-all duration-300 hover:bg-yellow-600 hover:text-white"
           >
             Start Browsing

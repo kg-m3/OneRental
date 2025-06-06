@@ -90,21 +90,40 @@ function App() {
             </>
           } />
           <Route path="/auth" element={<Auth />} />
-          <Route path="/equipment/:id" element={<EquipmentDetails />} />
-          <Route path="/all-equipment" element={<AllEquipment />} />
+          <Route path="/equipment/:id" element={
+             <>
+             <Navbar />
+             <EquipmentDetails />
+             <Footer />  
+             </>} />
+          <Route path="/all-equipment" element={
+             <>
+            <Navbar />
+            <AllEquipment />
+            <Footer />  
+            </>} />
 
           {/* Protected routes */}
-          <Route path="/list-equipment" element={<ListEquipment />} />
+          <Route path="/list-equipment" element={
+             <>
+             <Navbar />
+             <ListEquipment  />
+             <Footer />  
+             </>} />
           <Route path="/dashboard" element={ 
             <>
             <Navbar />
             <Dashboard />
             <Footer />  
-            </>} 
-            />
+            </>} />
           <Route path="/owner-dashboard" element={<OwnerDashboard />} />
           <Route path="/renter-dashboard" element={<RenterDashboard />} />
-          <Route path="/profile" element={<Profile />} />
+          <Route path="/profile" element={
+             <>
+            <Navbar />
+            <Profile />
+            <Footer />  
+            </>} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </Router>

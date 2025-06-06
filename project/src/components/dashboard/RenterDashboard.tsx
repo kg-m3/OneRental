@@ -100,7 +100,7 @@ const RenterDashboard = () => {
   
   const BookingDetailsModal = ({ booking, onClose }) => (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-      <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full">
+      <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
         <div className="flex justify-between items-center p-6 border-b">
           <h2 className="text-xl font-bold">Booking Details</h2>
           <button onClick={onClose} className="text-gray-500 hover:text-gray-700">
@@ -280,7 +280,7 @@ const RenterDashboard = () => {
         <h2 className="text-xl font-bold mb-4">Quick Actions</h2>
         <div className="flex space-x-4">
           <Link
-            to="/equipment"
+            to="/all-equipment"
             className="flex-1 bg-yellow-600 text-white rounded-lg p-4 flex items-center justify-center hover:bg-yellow-700 transition-colors"
           >
             <Search className="h-5 w-5 mr-2" />
@@ -309,8 +309,8 @@ const RenterDashboard = () => {
               className="border rounded-lg cursor-pointer transition-colors relative"
               onClick={() => setSelectedBooking(booking)}
             >
-              {/* Image Overlay */}
-              <div className="absolute left-0 top-0 w-48 h-full bg-gray-200 rounded-lg overflow-hidden">
+              {/* Image Container */}
+              <div className="w-full h-48 bg-gray-200 rounded-lg overflow-hidden md:absolute md:left-0 md:top-0 md:w-48 md:h-full">
                 <img 
                   src={booking.equipment?.images?.find((img: { image_url: string; is_main: boolean }) => img.is_main)?.image_url || '/public/default-equipment.jpg'}
                   alt={booking.equipment?.title || 'Equipment'}
@@ -318,38 +318,41 @@ const RenterDashboard = () => {
                 />
               </div>
               
+              {/* Content Container */}
               <div className="p-4 hover:bg-gray-50">
-                <div className="flex gap-4">
-                  <div className="w-48 h-full" />
+                <div className="flex flex-col gap-4 md:flex-row md:gap-4">
+                  <div className="w-full md:w-48 md:h-full" />
                   
                   {/* Booking Details */}
                   <div className="flex-1">
                     <div>
-                      <h3 className="font-semibold">{booking.equipment?.title}</h3>
-                      <div className="flex items-center text-sm text-gray-500 mt-1">
-                        <Calendar className="h-4 w-4 mr-1" />
-                        {new Date(booking.start_date).toLocaleDateString()} - {new Date(booking.end_date).toLocaleDateString()}
+                      <h3 className="font-semibold text-lg">{booking.equipment?.title}</h3>
+                      <div className="flex flex-col gap-2 mt-2">
+                        <div className="flex items-center text-sm text-gray-500">
+                          <Calendar className="h-4 w-4 mr-1" />
+                          <span>{new Date(booking.start_date).toLocaleDateString()} - {new Date(booking.end_date).toLocaleDateString()}</span>
+                        </div>
+                        <div className="flex items-center text-sm text-gray-500">
+                          <MapPin className="h-4 w-4 mr-1" />
+                          <span>{booking.equipment?.location}</span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-gray-600 font-semibold">
+                            Total: R{booking.total_amount}
+                          </span>
+                          <span className={`px-2 py-1 rounded-full text-sm ${
+                            booking.status === 'pending'
+                              ? 'bg-yellow-100 text-yellow-800'
+                              : booking.status === 'active'
+                              ? 'bg-green-100 text-green-800'
+                              : booking.status === 'rejected'
+                              ? 'bg-red-100 text-red-800'
+                              : 'bg-gray-100 text-gray-800'
+                          }`}>
+                            {booking.status}
+                          </span>
+                        </div>
                       </div>
-                      <div className="flex items-center text-sm text-gray-500 mt-1">
-                        <MapPin className="h-4 w-4 mr-1" />
-                        {booking.equipment?.location}
-                      </div>
-                    </div>
-                    <div className="mt-4 flex justify-between items-center">
-                      <span className="text-gray-600 font-semibold">
-                        Total: R{booking.total_amount}
-                      </span>
-                      <span className={`px-2 py-1 rounded-full text-md ${
-                        booking.status === 'pending'
-                          ? 'bg-yellow-100 text-yellow-800'
-                          : booking.status === 'active'
-                          ? 'bg-green-100 text-green-800'
-                          : booking.status === 'rejected'
-                          ? 'bg-red-100 text-red-800'
-                          : 'bg-gray-100 text-gray-800'
-                      }`}>
-                        {booking.status}
-                      </span>
                     </div>
                   </div>
                 </div>

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { Calendar, MapPin, PenTool as Tool, HandCoins, Shield, ArrowLeft, X, Clock, AlertTriangle } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useDrag } from '@use-gesture/react';
@@ -45,6 +45,7 @@ interface BookingRequest {
 }
 
 const EquipmentDetails = () => {
+  const navigate = useNavigate();
   const { id } = useParams();
   const [showBookingModal, setShowBookingModal] = useState(false);
   const [showLoginModal, setShowLoginModal] = useState(false);
@@ -259,10 +260,10 @@ const EquipmentDetails = () => {
   return (
     <div className="min-h-screen bg-gray-50 pt-20">
       <div className="container mx-auto px-4 py-8">
-        <Link to="/equipment" className="inline-flex items-center text-gray-600 hover:text-yellow-600 mb-6">
+        <button onClick={() => navigate(-1)} className="inline-flex items-center text-gray-600 hover:text-yellow-600 mb-6">
           <ArrowLeft className="h-5 w-5 mr-2" />
           Back to Equipment
-        </Link>
+        </button>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Left Column - Images */}

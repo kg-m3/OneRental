@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
 import { supabase } from '../lib/supabase';
-import { Upload, MapPin, DollarSign, PenTool as Tool, Info } from 'lucide-react';
+import { Upload, MapPin, DollarSign, PenTool as Tool, Info, ArrowLeft } from 'lucide-react';
 import { useAuth } from '../context/authContext';
-import { Navigate } from 'react-router-dom';
+import { Navigate, useNavigate } from 'react-router-dom';
 
 const ListEquipment = () => {
+  const navigate = useNavigate();
   const { user } = useAuth();
   
   console.log(user);
@@ -117,6 +118,11 @@ const ListEquipment = () => {
   return (
     <div className="min-h-screen bg-gray-50 pt-20">
       <div className="container mx-auto px-4 py-8">
+        <button onClick={() => navigate(-1)} className="inline-flex items-center text-gray-600 hover:text-yellow-600 mb-6">
+          <ArrowLeft className="h-5 w-5 mr-2" />
+          Back
+        </button>
+        <div className="max-w-3xl mx-auto">
         <div className="max-w-3xl mx-auto">
           <h1 className="text-3xl font-bold text-gray-800 mb-6">List Your Equipment</h1>
           
@@ -317,6 +323,7 @@ const ListEquipment = () => {
           </form>
         </div>
       </div>
+    </div>
     </div>
   );
 };
