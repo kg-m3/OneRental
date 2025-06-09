@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom';
 
 const ListingCTA = () => {
   return (
-    <section className="py-20 bg-yellow-600 relative overflow-hidden">
+    <section className="py-20 bg-gray-800 relative overflow-hidden">
       {/* Background Pattern */}
       <div className="absolute inset-0 opacity-10">
         <div className="absolute top-0 left-0 right-0 h-32 bg-white transform -skew-y-6 origin-top-left"></div>
@@ -54,7 +54,7 @@ const ListingCTA = () => {
         <div className="text-center">
           <Link
             to="/list-equipment"
-            className="px-8 py-4 bg-white text-yellow-600 rounded-lg font-bold text-lg shadow-xl transition-all duration-300 hover:bg-gray-100 hover:scale-105"
+            className="px-8 py-4 bg-white text-gray-900 rounded-lg font-bold text-lg shadow-xl transition-all duration-300 hover:bg-gray-100 hover:scale-105"
           >
             Start Listing Your Equipment
           </Link>

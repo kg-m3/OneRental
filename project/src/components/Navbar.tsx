@@ -197,7 +197,7 @@ const Navbar = () => {
             <button
               onClick={() => setIsOpen(!isOpen)}
               className={`md:hidden ${
-                shouldShowTransparentNav ? 'text-white' : 'text-gray-800'
+                'text-gray-800'
               } focus:outline-none`}
             >
               {isOpen ? <X size={24} /> : <Menu size={24} />}
