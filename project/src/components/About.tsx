@@ -89,7 +89,7 @@ const About = () => {
       {/* Who We Are Section */}
       <section id="about" className="py-20 bg-white">
         <div className="container mx-auto py-20 px-4 text-center">
-          <h2 className="text-3xl md:text-4xl font-bold text-gray-800 mb-6">
+          <h2 className="text-3xl md:text-4xl font-bold text-gray-700 mb-6">
             Who We Are
           </h2>
           <p className="text-lg text-gray-600 max-w-4xl mx-auto mb-12">
@@ -128,7 +128,7 @@ const About = () => {
                 "When machines are idle, opportunities are missed. We’re
                 changing that."
               </p>
-              <p className="text-yellow-600 text-sm mt-2">— Platform Vision</p>
+              <p className="text-gray-900 text-sm mt-2">— OneRental Vision</p>
             </div>
             <div
               className="h-60 rounded-xl overflow-hidden shadow-xl bg-cover bg-center"
@@ -172,7 +172,7 @@ const About = () => {
             <div>
               <a
                 href="#how-it-works"
-                className="inline-flex items-center text-yellow-600 font-semibold hover:text-yellow-700 transition-colors"
+                className="inline-flex items-center text-gray-900 font-semibold hover:text-gray-600 transition-colors"
               >
                 Learn how our platform works
                 <svg

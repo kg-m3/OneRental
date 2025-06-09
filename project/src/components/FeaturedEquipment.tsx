@@ -160,7 +160,7 @@ const FeaturedEquipment = () => {
 
                 <Link
                   to={`/equipment/${item.id}`}
-                  className="block w-full text-center py-3 bg-yellow-600 text-white rounded-lg font-medium transition-colors duration-300 hover:bg-yellow-700"
+                  className="block w-full text-center py-3 bg-gray-800 text-white rounded-lg font-medium transition-colors duration-300 hover:bg-gray-600"
                 >
                   View Details
                 </Link>
@@ -172,7 +172,7 @@ const FeaturedEquipment = () => {
         <div className="text-center mt-12">
           <Link
             to="/all-equipment"
-            className="px-8 py-3 border-2 border-yellow-600 text-yellow-600 rounded-lg font-semibold transition-all duration-300 hover:bg-yellow-600 hover:text-white"
+            className="px-8 py-3 border-2 border-gray-800 text-gray-800 rounded-lg font-semibold transition-all duration-300 hover:bg-gray-800 hover:text-white"
           >
             View All Equipment
           </Link>

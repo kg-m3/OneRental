@@ -5,19 +5,19 @@ import { Search, BookOpen, Truck, Star } from 'lucide-react';
 const HowItWorks = () => {
   const steps = [
     {
-      icon: <Search className="h-10 w-10 text-yellow-600" />,
+      icon: <Search className="h-10 w-10 text-gray-800" />,
       title: '1. Browse Equipment',
       description:
         'Explore available machinery by type, location, and availability.',
     },
     {
-      icon: <BookOpen className="h-10 w-10 text-yellow-600" />,
+      icon: <BookOpen className="h-10 w-10 text-gray-800" />,
       title: '2. Book with Confidence',
       description:
         'Send rental requests, get pricing and details, and finalize your booking online.',
     },
     {
-      icon: <Truck className="h-10 w-10 text-yellow-600" />,
+      icon: <Truck className="h-10 w-10 text-gray-800" />,
       title: '3. Get to Work',
       description: 'Pick up or arrange delivery. Use the equipment as agreed.',
     },
@@ -58,7 +58,7 @@ const HowItWorks = () => {
         <div className="text-center mt-12">
           <Link
             to="/all-equipment"
-            className="px-8 py-3 border-2 border-yellow-600 text-yellow-600 rounded-lg font-semibold transition-all duration-300 hover:bg-yellow-600 hover:text-white"
+            className="px-8 py-3 border-2 border-gray-800 text-gray-800 rounded-lg font-semibold transition-all duration-300 hover:bg-gray-800 hover:text-white"
           >
             Start Browsing
           </Link>

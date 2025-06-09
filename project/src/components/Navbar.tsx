@@ -130,8 +130,8 @@ const Navbar = () => {
                     navigate(item.path);
                   }
                 }}
-                className={`px-4 py-2 hover:text-yellow-600 ${
-                  shouldShowTransparentNav ? 'text-white hover:text-gray-200'
+                className={`px-4 py-2 hover:text-blue-500 ${
+                  shouldShowTransparentNav ? 'text-gray hover:text-blue-200'
                                           : 'text-gray-800 hover:text-yellow-600'
                 }transition-colors`}
               >
@@ -146,7 +146,7 @@ const Navbar = () => {
                 <button
                   onClick={() => setShowUserMenu(!showUserMenu)}
                   className={`flex items-center space-x-2 ${
-                    shouldShowTransparentNav ? 'text-white' : 'text-gray-800'
+                    shouldShowTransparentNav ? 'text-gray' : 'text-gray-800'
                   }`}
                 >
                   <User className="h-5 w-5" />
@@ -186,9 +186,7 @@ const Navbar = () => {
               <Link
                 to="/auth"
                 className={`flex items-center space-x-0.5 ${
-                  shouldShowTransparentNav
-                    ? 'text-white hover:text-gray-200'
-                    : 'text-gray-800 hover:text-gray-600'
+                  'text-gray-800 hover:text-gray-600'
                 } transition-colors text-xs sm:text-sm md:text-base whitespace-nowrap`}
               >
                 Sign In

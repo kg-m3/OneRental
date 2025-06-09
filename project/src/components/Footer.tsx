@@ -18,7 +18,7 @@ const Footer = () => {
           {/* Company Info */}
           <div>
             <div className="flex items-center mb-4">
-              <Truck className="h-8 w-8 text-yellow-500 mr-2" />
+              <Truck className="h-8 w-8 text-gray-500 mr-2" />
               <span className="font-bold text-xl">OneRental</span>
             </div>
             <p className="text-gray-400 mb-4">
@@ -60,7 +60,7 @@ const Footer = () => {
             </h3>
             <ul className="space-y-3">
               <li className="flex items-start">
-                <MapPin className="h-5 w-5 text-yellow-500 mr-2 mt-0.5" />
+                <MapPin className="h-5 w-5 text-gray-500 mr-2 mt-0.5" />
                 <span className="text-gray-400">
                   123 Construction Road
                   <br />
@@ -68,11 +68,11 @@ const Footer = () => {
                 </span>
               </li>
               <li className="flex items-center">
-                <Phone className="h-5 w-5 text-yellow-500 mr-2" />
+                <Phone className="h-5 w-5 text-gray-500 mr-2" />
                 <span className="text-gray-400">+27 12 345 6789</span>
               </li>
               <li className="flex items-center">
-                <Mail className="h-5 w-5 text-yellow-500 mr-2" />
+                <Mail className="h-5 w-5 text-gray-500 mr-2" />
                 <span className="text-gray-400">info@onerental.co.za</span>
               </li>
             </ul>
