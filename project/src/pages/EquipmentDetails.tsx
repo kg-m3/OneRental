@@ -74,20 +74,30 @@ const EquipmentDetails = () => {
     'https://images.unsplash.com/photo-1630288214032-2c4cc2c080ca?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8QnVsbGRvemVyfGVufDB8fDB8fHww',
     'https://images.unsplash.com/photo-1610477865545-37711c53144d?q=80&w=2047&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
   ];
+  // Use mock images if equipment images are not available
+  const imagesToShow = equipment?.images?.map(img => img.image_url) || mockImages;
   const handleImageChange = (index: number) => {
     setCurrentImageIndex(index);
   };
 
-  // Swipe gesture handler
-  const bind = useDrag(({ active, movement: [mx], offset: [ox] }) => {
+  // Swipe gesture handler with improved transitions
+  const bind = useDrag(({ active, movement: [mx], offset: [ox], velocity: [vx] }) => {
     setDragging(active);
     setDragOffset(ox);
 
-    if (!active && Math.abs(ox) > 50) { // Swipe threshold
-       const newIndex = ox > 0 
-         ? (currentImageIndex - 1 + (equipment?.images?.length || 0)) % (equipment?.images?.length || 0)
-         : (currentImageIndex + 1) % (equipment?.images?.length || 0);
+    // Calculate swipe velocity for better momentum
+    const swipeVelocity = vx > 0 ? 1 : vx < 0 ? -1 : 0;
+    const swipeThreshold = Math.abs(ox) > 50 || Math.abs(vx) > 0.5;
+
+    if (!active && swipeThreshold) {
+      // Calculate new index with momentum
+      const newIndex = (currentImageIndex + swipeVelocity) % imagesToShow.length;
       setCurrentImageIndex(newIndex);
+      
+      // Reset drag offset with smooth animation
+      setTimeout(() => {
+        setDragOffset(0);
+      }, 100);
     }
   });
 
@@ -271,23 +281,24 @@ const EquipmentDetails = () => {
             <div className="bg-white rounded-lg shadow-lg overflow-hidden">
               <div className="relative" {...bind()}>
                 <img
-                  src={equipment?.images?.[currentImageIndex]?.image_url || ''}
-                  alt={equipment?.title}
+                  src={imagesToShow[currentImageIndex]}
+                  alt={equipment?.title || 'Equipment'}
                   className="w-full h-[400px] object-cover transition-transform duration-300"
                   style={{
-                    transform: `translateX(${dragging ? dragOffset : 0}px)`
+                    transform: `translateX(${dragging ? dragOffset : 0}px)`,
+                    transition: `transform ${dragging ? '0.1s' : '0.3s'} cubic-bezier(0.4, 0, 0.2, 1)`
                   }}
                 />
                 <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex space-x-2">
-                  {equipment?.images?.map((image, index) => (
+                  {imagesToShow.map((_, index) => (
                     <button
                       key={index}
                       onClick={() => handleImageChange(index)}
-                      className="w-2 h-2 rounded-full transition-all duration-300 ${
+                      className={`w-2 h-2 rounded-full transition-all duration-300 ${
                         index === currentImageIndex 
                           ? 'bg-blue-900' 
                           : 'bg-gray-300 hover:bg-gray-400'
-                      }"
+                      }`}
                     />
                   ))}
                 </div>
@@ -413,7 +424,7 @@ const EquipmentDetails = () => {
                     setShowLoginModal(false);
                     window.location.href = '/auth';
                   }}
-                  className="px-6 py-3 bg-yellow-600 text-white rounded-lg font-semibold hover:bg-yellow-700 transition-colors"
+                  className="px-6 py-3 bg-blue-900 text-white rounded-lg font-semibold hover:bg-blue-800 transition-colors"
                 >
                   Login
                 </button>
@@ -434,7 +445,7 @@ const EquipmentDetails = () => {
 
       {/* Booking Modal */}
       {showBookingModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 pt-32 z-50 ">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex flex-col justify-center items-center p-4 z-50">
           <div className="bg-white rounded-lg shadow-xl max-w-md w-full">
             <div className="flex justify-between items-center p-6 border-b">
               <h2 className="text-xl font-bold text-gray-800">Book Equipment</h2>
@@ -508,7 +519,7 @@ const EquipmentDetails = () => {
                 </div>
               )}
 
-            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 sticky bottom-0">
               <div className="flex items-start">
                 <AlertTriangle className="h-5 w-5 text-yellow-500 mt-0.5 mr-2" />
                 <div>

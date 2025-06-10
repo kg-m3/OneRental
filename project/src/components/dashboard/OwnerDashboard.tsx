@@ -86,8 +86,44 @@ const OwnerDashboard = () => {
     location: '',
     rate: 0,
     status: '',
-    image_url: '',
+    images: [] as { id: string; image_url: string; is_main: boolean }[],
   });
+
+  const handleImageDelete = (imageId: string) => {
+    setEditFormData(prev => ({
+      ...prev,
+      images: prev.images.filter(img => img.id !== imageId)
+    }));
+  };
+
+  const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    try {
+      const { error } = await supabase.storage
+        .from('equipment-images')
+        .upload(`equipment-${selectedEquipment?.id}/${file.name}`, file);
+
+      if (error) throw error;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('equipment-images')
+        .getPublicUrl(`equipment-${selectedEquipment?.id}/${file.name}`);
+
+      setEditFormData(prev => ({
+        ...prev,
+        images: [...prev.images, {
+          id: Date.now().toString(),
+          image_url: publicUrl,
+          is_main: false
+        }]
+      }));
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      alert('Failed to upload image. Please try again.');
+    }
+  };
   const [stats, setStats] = useState({
     totalEquipment: 0,
     activeBookings: 0,
@@ -105,7 +141,7 @@ const OwnerDashboard = () => {
       location: equipment.location,
       rate: equipment.rate,
       status: equipment.status,
-      image_url: equipment.equipment_images.find((i) => i.is_main)?.image_url || '',
+      images: equipment.equipment_images,
     });
     setIsEditModalOpen(true);
   };
@@ -142,7 +178,11 @@ const OwnerDashboard = () => {
         location: '',
         rate: 0,
         status: '',
-        image_url: '',
+        images: [{
+          id: '',
+          image_url: '',
+          is_main: true
+        }],
       });
     } catch (error) {
       console.error('Error updating equipment:', error);
@@ -160,7 +200,11 @@ const OwnerDashboard = () => {
       location: '',
       rate: 0,
       status: '',
-      image_url: '',
+      images: [{
+        id: '',
+        image_url: '',
+        is_main: true
+      }],
     });
   };
 
@@ -937,14 +981,45 @@ const OwnerDashboard = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">Image URL</label>
-                  <input
-                    type="text"
-                    name="image_url"
-                    value={editFormData.image_url}
-                    onChange={handleEditFormChange}
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500"
-                  />
+                  <label className="block text-sm font-medium text-gray-700">Images</label>
+                  <div className="mt-2 space-y-4">
+                    {/* Existing Images */}
+                    <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+                      {editFormData.images.map((image) => (
+                        <div key={image.id} className="relative">
+                          <img
+                            src={image.image_url}
+                            alt="Equipment"
+                            className="w-full h-32 object-cover rounded-lg"
+                          />
+                          <button
+                            onClick={() => handleImageDelete(image.id)}
+                            className="absolute -top-2 -right-2 bg-white rounded-full p-1 shadow-lg hover:bg-gray-100"
+                          >
+                            <XCircle className="h-4 w-4 text-red-500" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Image Upload */}
+                    <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center">
+                      <label className="cursor-pointer">
+                        <div className="flex flex-col items-center justify-center space-y-2">
+                          <Plus className="h-6 w-6 text-gray-400" />
+                          <span className="text-sm text-gray-600">
+                            Click or drag and drop to upload images
+                          </span>
+                        </div>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={handleImageUpload}
+                          className="hidden"
+                        />
+                      </label>
+                    </div>
+                  </div>
                 </div>
 
                 {deleteConfirmOpen && (
