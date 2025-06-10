@@ -9,6 +9,7 @@ import {
   Mail,
   MapPin,
 } from 'lucide-react';
+import logo from '../assets/img/1Rental_Logo_White.svg';
 
 const Footer = () => {
   return (
@@ -18,14 +19,13 @@ const Footer = () => {
           {/* Company Info */}
           <div>
             <div className="flex items-center mb-4">
-              <Truck className="h-8 w-8 text-gray-500 mr-2" />
-              <span className="font-bold text-xl">OneRental</span>
+              <img src={logo} alt="Logo" className="h-9 w-32 text-gray-500 mr-2" />
             </div>
             <p className="text-gray-400 mb-4">
               South Africa's premier platform connecting construction equipment
               owners with those who need reliable machinery.
             </p>
-            <div className="flex space-x-4">
+            {/* <div className="flex space-x-4">
               <a
                 href="#"
                 className="text-gray-400 hover:text-yellow-500 transition-colors"
@@ -50,7 +50,7 @@ const Footer = () => {
               >
                 <Linkedin className="h-5 w-5" />
               </a>
-            </div>
+            </div> */}
           </div>
 
           {/* Contact Info */}
@@ -62,14 +62,14 @@ const Footer = () => {
               <li className="flex items-start">
                 <MapPin className="h-5 w-5 text-gray-500 mr-2 mt-0.5" />
                 <span className="text-gray-400">
-                  123 Construction Road
+                  Prozesky Lane, Rayton
                   <br />
-                  Johannesburg, South Africa
+                  Gauteng, South Africa
                 </span>
               </li>
               <li className="flex items-center">
                 <Phone className="h-5 w-5 text-gray-500 mr-2" />
-                <span className="text-gray-400">+27 12 345 6789</span>
+                <span className="text-gray-400">+27 (0) 61 222 2222</span>
               </li>
               <li className="flex items-center">
                 <Mail className="h-5 w-5 text-gray-500 mr-2" />
