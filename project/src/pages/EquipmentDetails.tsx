@@ -64,24 +64,17 @@ const EquipmentDetails = () => {
   const [totalAmount, setTotalAmount] = useState(0);
 
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  const [images, setImages] = useState<string[]>([]);
-  const [dragging, setDragging] = useState(false);
+  const [images, setImages] = useState<string[]>([]);  const [dragging, setDragging] = useState(false);
   const [dragOffset, setDragOffset] = useState(0);
 
-  // Mock image data for testing
-  const mockImages = [
-    'https://images.unsplash.com/photo-1646297970360-94c9f6d8903c?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
-    'https://images.unsplash.com/photo-1630288214032-2c4cc2c080ca?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8QnVsbGRvemVyfGVufDB8fDB8fHww',
-    'https://images.unsplash.com/photo-1610477865545-37711c53144d?q=80&w=2047&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
-  ];
-  // Use mock images if equipment images are not available
-  const imagesToShow = equipment?.images?.map(img => img.image_url);
+  // Get images from equipment object
+  const imagesToShow = equipment?.images?.map(img => img.image_url) || [];
   const handleImageChange = (index: number) => {
     setCurrentImageIndex(index);
   };
 
   // Swipe gesture handler with improved transitions
-  const bind = useDrag(({ active, movement: [mx], offset: [ox], velocity: [vx] }) => {
+  const swipeHandler = useDrag(({ active, movement: [mx], offset: [ox], velocity: [vx] }) => {
     setDragging(active);
     setDragOffset(ox);
 
@@ -91,7 +84,10 @@ const EquipmentDetails = () => {
 
     if (!active && swipeThreshold) {
       // Calculate new index with momentum
-      const newIndex = (currentImageIndex + swipeVelocity) % imagesToShow.length;
+      const newIndex = Math.max(0, Math.min(
+        (currentImageIndex + swipeVelocity + imagesToShow.length) % imagesToShow.length,
+        imagesToShow.length - 1
+      ));
       setCurrentImageIndex(newIndex);
       
       // Reset drag offset with smooth animation
@@ -100,6 +96,80 @@ const EquipmentDetails = () => {
       }, 100);
     }
   });
+
+  useEffect(() => {
+    // Get current user
+    const checkAuth = async () => {
+      try {
+        setAuthState('checking');
+        const { data: { user }, error: authError } = await supabase.auth.getUser();
+        if (authError) {
+          if (authError instanceof Error && authError.name === 'AuthSessionMissingError') {
+            console.log('No active session found');
+            setAuthState('unauthenticated');
+            return;
+          }
+          throw authError;
+        }
+
+        if (!user) {
+          console.log('User not authenticated');
+          setAuthState('unauthenticated');
+        } else {
+          console.log('User authenticated');
+          console.log(user);
+          setUser(user);
+          setAuthState('authenticated');
+        }
+      } catch (error) {
+        console.error('Error checking auth:', error);
+        setAuthState('unauthenticated');
+      } finally {
+        // Add finally block to ensure proper cleanup
+      }
+    };
+
+    const fetchEquipmentDetails = async () => {
+      try {
+        setLoading(true);
+        setError('');
+        
+        const { data: equipment, error: equipmentError } = await supabase
+          .from('equipment')
+          .select('*,user_profiles!inner (id, company_name, full_name, email), equipment_images(*)')
+          .eq('id', id)
+          .single();
+
+        if (equipmentError) throw equipmentError;
+
+        // Equipment already includes images from the join query
+        setEquipment(equipment);
+        
+        // Update images state with the images from the equipment object
+        const images = equipment?.images?.map(img => img.image_url) || [];
+        setImages(images);
+
+        if (equipment?.rate && duration > 0) {
+          setTotalAmount(equipment.rate * duration);
+        }
+      } catch (err) {
+        setError('Failed to fetch equipment details');
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    checkAuth();
+    fetchEquipmentDetails();
+  }, [id, duration, equipment?.rate]);
+
+  const calculateDuration = (start: string, end: string) => {
+    const startDate = new Date(start);
+    const endDate = new Date(end);
+    const diffTime = Math.abs(endDate.getTime() - startDate.getTime());
+    return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  };
 
   useEffect(() => {
      // Get current user
@@ -177,13 +247,6 @@ const EquipmentDetails = () => {
     }
   }, [id, duration, equipment?.rate]);
 
-
-  const calculateDuration = (start: string, end: string) => {
-        const startDate = new Date(start);
-        const endDate = new Date(end);
-        const diffTime = Math.abs(endDate.getTime() - startDate.getTime());
-        return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    };
 
   const handleDateChange = (field: 'startDate' | 'endDate', value: string) => {
         const newBookingData = { ...bookingData, [field]: value };
@@ -266,6 +329,7 @@ const EquipmentDetails = () => {
 
   // const handleImageChange = (index: number) => {
   //   setCurrentImageIndex(index);
+   // Add this JSX where you want the slider to appear:S
   // };
   return (
     <div className="min-h-screen bg-gray-50 pt-20">
@@ -279,16 +343,20 @@ const EquipmentDetails = () => {
           {/* Left Column - Images */}
           <div className="space-y-6">
             <div className="bg-white rounded-lg shadow-lg overflow-hidden">
-              <div className="relative" {...bind()}>
-                <img
-                  src={imagesToShow[currentImageIndex]}
-                  alt={equipment?.title || 'Equipment'}
-                  className="w-full h-[400px] object-cover transition-transform duration-300"
-                  style={{
-                    transform: `translateX(${dragging ? dragOffset : 0}px)`,
-                    transition: `transform ${dragging ? '0.1s' : '0.3s'} cubic-bezier(0.4, 0, 0.2, 1)`
-                  }}
-                />
+              <div {...swipeHandler()} className="relative w-full">
+                <div className="relative w-full h-[400px] overflow-hidden">
+                  <img
+                    src={imagesToShow[currentImageIndex]}
+                    alt={equipment?.title || 'Equipment'}
+                    className="w-full h-full object-cover transition-transform duration-300"
+                    style={{
+                      transform: `translateX(${dragging ? dragOffset : 0}px)`
+                    }}
+                  />
+               
+                {dragging && (
+                  <div className="absolute inset-0 bg-black/50 rounded-lg pointer-events-none"></div>
+                )}
                 <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex space-x-2">
                   {imagesToShow.map((_, index) => (
                     <button
@@ -302,6 +370,7 @@ const EquipmentDetails = () => {
                     />
                   ))}
                 </div>
+              </div>
               </div>
             </div>
             
