@@ -49,8 +49,11 @@ const RenterDashboard = () => {
   const [error, setError] = useState('');
 
   useEffect(() => {
-
     fetchBookings();
+
+  }, []);
+  useEffect(() => {
+
     setStats({
       activeBookings: bookings.filter(b => b.status === 'active').length,
       totalBookings: bookings.length,
@@ -99,15 +102,15 @@ const RenterDashboard = () => {
 
   
   const BookingDetailsModal = ({ booking, onClose }) => (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-      <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-start justify-center p-4 z-50">
+      <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full h-[90vh] flex flex-col">
         <div className="flex justify-between items-center p-6 border-b">
           <h2 className="text-xl font-bold">Booking Details</h2>
           <button onClick={onClose} className="text-gray-500 hover:text-gray-700">
             <XCircle className="h-6 w-6" />
           </button>
         </div>
-        <div className="p-6">
+        <div className="flex-1 overflow-y-auto p-6">
           <div className="flex items-center gap-4 mb-4">
             <div className="w-24 h-24">
               <img
