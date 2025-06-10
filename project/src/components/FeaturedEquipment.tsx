@@ -111,7 +111,7 @@ const FeaturedEquipment = () => {
     <section id="equipment" className="py-20 bg-white">
       <div className="container mx-auto px-4">
         <div className="text-center mb-16">
-          <h2 className="text-3xl md:text-4xl font-bold text-gray-800 mb-4">
+          <h2 className="text-3xl md:text-4xl font-bold text-blue-800 mb-4">
            Featured Equipment
           </h2>
           <p className="text-lg text-gray-600 max-w-3xl mx-auto">
@@ -143,7 +143,7 @@ const FeaturedEquipment = () => {
 
               <div className="p-6">
                 <div className="flex justify-between items-center mb-3">
-                  <h3 className="text-xl font-bold text-gray-800">
+                  <h3 className="text-xl font-bold text-blue-800">
                     {item.title}
                   </h3>
                   <span className="text-green-600 font-semibold">
@@ -160,7 +160,7 @@ const FeaturedEquipment = () => {
 
                 <Link
                   to={`/equipment/${item.id}`}
-                  className="block w-full text-center py-3 bg-gray-800 text-white rounded-lg font-medium transition-colors duration-300 hover:bg-gray-600"
+                  className="block w-full text-center py-3 bg-blue-900 text-white rounded-lg font-medium transition-colors duration-300 hover:bg-blue-800"
                 >
                   View Details
                 </Link>
@@ -172,7 +172,7 @@ const FeaturedEquipment = () => {
         <div className="text-center mt-12">
           <Link
             to="/all-equipment"
-            className="px-8 py-3 border-2 border-gray-800 text-gray-800 rounded-lg font-semibold transition-all duration-300 hover:bg-gray-800 hover:text-white"
+            className="px-8 py-3 border-2 border-blue-800 text-blue-900 rounded-lg font-semibold transition-all duration-300 hover:bg-blue-800 hover:text-white"
           >
             View All Equipment
           </Link>

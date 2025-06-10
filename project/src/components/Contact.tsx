@@ -53,7 +53,7 @@ const Contact = () => {
     <section id="contact" className="py-20 bg-gray-50">
       <div className="container mx-auto px-4">
         <div className="text-center mb-16">
-          <h2 className="text-3xl md:text-4xl font-bold text-gray-800 mb-4">Want to work with us?</h2>
+          <h2 className="text-3xl md:text-4xl font-bold text-blue-800 mb-4">Want to work with us?</h2>
           <p className="text-lg text-gray-600 max-w-3xl mx-auto">
             Your project is very important to us. Reach out and let's discuss how we can help.
           </p>
@@ -114,7 +114,7 @@ const Contact = () => {
 
             <button
               type="submit"
-              className="w-full flex items-center justify-center space-x-2 py-3 bg-gray-900 text-white rounded-lg font-semibold transition-all duration-300 hover:bg-gray-700 hover:scale-[1.02]"
+              className="w-full flex items-center justify-center space-x-2 py-3 bg-blue-900 text-white rounded-lg font-semibold transition-all duration-300 hover:bg-blue-800 hover:scale-[1.02]"
             >
               <span>Send Message</span>
               <Send className="h-5 w-5" />

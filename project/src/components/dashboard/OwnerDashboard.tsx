@@ -412,7 +412,7 @@ const OwnerDashboard = () => {
     if (isLoading) {
       return (
         <div className="flex items-center justify-center min-h-[200px]">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-yellow-600"></div>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-900"></div>
         </div>
       );
     }
@@ -423,7 +423,7 @@ const OwnerDashboard = () => {
           <p className="text-red-600">{error}</p>
           <button
             onClick={() => window.location.reload()}
-            className="mt-4 px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700"
+            className="mt-4 px-4 py-2 bg-blue-900 text-white rounded-lg hover:bg-blue-800"
           >
             Try Again
           </button>
@@ -439,7 +439,7 @@ const OwnerDashboard = () => {
               <h2 className="text-xl font-bold">My Equipment</h2>
               <Link
                 to="/list-equipment"
-                className="flex items-center px-3 py-1.5 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition-colors md:px-4 md:py-2"
+                className="flex items-center px-3 py-1.5 bg-blue-900 text-white rounded-lg hover:bg-blue-800 transition-colors md:px-4 md:py-2"
               >
                 <Plus className="h-4 w-4 md:h-5 md:w-5" />
                 <span className="hidden md:inline ml-2 text-sm md:text-base">
@@ -483,7 +483,7 @@ const OwnerDashboard = () => {
                       <div className="space-x-2 flex">
                         <button
                           onClick={() => handleEditEquipment(item)}
-                          className="px-1.5 py-1 border-2 bg-yellow-600 text-white rounded-md font-medium transition-all duration-300 hover:bg-yellow-700 transition-colors text-sm"
+                          className="px-1.5 py-1 border-2 border-blue-900 bg-blue-900 text-white rounded-md font-medium transition-all duration-300 hover:bg-blue-800 hover:border-blue-800 transition-colors text-sm"
                           title="Edit Equipment"
                         >
                           View Equipment
@@ -498,7 +498,7 @@ const OwnerDashboard = () => {
                               handleEquipmentStatus(item.id, item.status === 'available' ? 'inactive' : 'available');
                             }
                           }}
-                          className="px-1.5 py-1 border-2 bg-yellow-600 text-white rounded-md font-medium transition-all duration-300 hover:bg-yellow-700 transition-colors text-sm"
+                          className="px-1.5 py-1 border-2 border-blue-900 bg-blue-900 text-white rounded-md font-medium transition-all duration-300 hover:bg-blue-800 hover:border-blue-800 transition-colors text-sm"
                           title={item.status === 'available' ? 'Mark as Inactive' : 'Mark as Available'}
                         >
                           {item.status === 'available' ? "Mark Inactive" : "Mark Active"}
@@ -590,7 +590,7 @@ const OwnerDashboard = () => {
                               setSelectedStatus('all');
                               setIsFilterMenuOpen(false);
                             }}
-                            className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600"
+                            className="px-4 py-2 bg-blue-900 text-white rounded-lg hover:bg-blue-800"
                           >
                             Clear All
                           </button>
@@ -777,7 +777,7 @@ const OwnerDashboard = () => {
               <p className="text-gray-500">Total Equipment</p>
               <h3 className="text-2xl font-bold">{stats.totalEquipment}</h3>
             </div>
-            <Package className="h-8 w-8 text-yellow-600" />
+            <Package className="h-8 w-8 text-blue-900" />
           </div>
         </div>
 
@@ -787,7 +787,7 @@ const OwnerDashboard = () => {
               <p className="text-gray-500">Active Bookings</p>
               <h3 className="text-2xl font-bold">{stats.activeBookings}</h3>
             </div>
-            <Calendar className="h-8 w-8 text-yellow-600" />
+            <Calendar className="h-8 w-8 text-blue-900" />
           </div>
         </div>
 
@@ -797,7 +797,7 @@ const OwnerDashboard = () => {
               <p className="text-gray-500">Total Bookings</p>
               <h3 className="text-2xl font-bold">{stats.totalBookings}</h3>
             </div>
-            <Calendar className="h-8 w-8 text-yellow-600" />
+            <Calendar className="h-8 w-8 text-blue-900" />
           </div>
         </div>
       </div>
@@ -808,7 +808,7 @@ const OwnerDashboard = () => {
           <button
             className={`px-6 py-3 text-sm font-medium ${
               activeTab === 'equipment'
-                ? 'border-b-2 border-yellow-600 text-yellow-600'
+                ? 'border-b-2 border-blue-900 text-blue-900'
                 : 'text-gray-500 hover:text-gray-700'
             }`}
             onClick={() => setActiveTab('equipment')}
@@ -818,7 +818,7 @@ const OwnerDashboard = () => {
           <button
             className={`px-6 py-3 text-sm font-medium ${
               activeTab === 'requests'
-                ? 'border-b-2 border-yellow-600 text-yellow-600'
+                ? 'border-b-2 border-blue-900 text-blue-900'
                 : 'text-gray-500 hover:text-gray-700'
             }`}
             onClick={() => setActiveTab('requests')}
@@ -828,7 +828,7 @@ const OwnerDashboard = () => {
           <button
             className={`px-6 py-3 text-sm font-medium ${
               activeTab === 'calendar'
-                ? 'border-b-2 border-yellow-600 text-yellow-600'
+                ? 'border-b-2 border-blue-900 text-blue-900'
                 : 'text-gray-500 hover:text-gray-700'
             }`}
             onClick={() => setActiveTab('calendar')}
@@ -989,7 +989,7 @@ const OwnerDashboard = () => {
                   </button>
                   <button
                     type="submit"
-                    className="px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700"
+                    className="px-4 py-2 bg-blue-900 text-white rounded-lg hover:bg-blue-800"
                   >
                     Save Changes
                   </button>

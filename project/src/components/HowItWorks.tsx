@@ -32,7 +32,7 @@ const HowItWorks = () => {
     <section id="how-it-works" className="py-20 bg-gray-50">
       <div className="container mx-auto px-4">
         <div className="text-center mb-16">
-          <h2 className="text-3xl md:text-4xl font-bold text-gray-800 mb-4">
+          <h2 className="text-3xl md:text-4xl font-bold text-blue-800 mb-4">
             How It Works
           </h2>
           <p className="text-lg text-gray-600 max-w-3xl mx-auto">
@@ -47,7 +47,7 @@ const HowItWorks = () => {
               className="bg-white p-6 rounded-xl shadow-md transition-all duration-300 hover:shadow-xl transform hover:-translate-y-2"
             >
               <div className="flex justify-center mb-4">{step.icon}</div>
-              <h3 className="text-xl font-bold text-gray-800 mb-3 text-center">
+              <h3 className="text-xl font-bold text-blue-800 mb-3 text-center">
                 {step.title}
               </h3>
               <p className="text-gray-600 text-center">{step.description}</p>
@@ -58,7 +58,7 @@ const HowItWorks = () => {
         <div className="text-center mt-12">
           <Link
             to="/all-equipment"
-            className="px-8 py-3 border-2 border-gray-800 text-gray-800 rounded-lg font-semibold transition-all duration-300 hover:bg-gray-800 hover:text-white"
+            className="px-8 py-3 border-2 border-blue-800 text-blue-900 rounded-lg font-semibold transition-all duration-300 hover:bg-blue-800 hover:text-white"
           >
             Start Browsing
           </Link>

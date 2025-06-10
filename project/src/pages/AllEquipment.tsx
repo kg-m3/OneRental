@@ -85,7 +85,7 @@ const AllEquipment = () => {
   return (
     <div className="min-h-screen bg-gray-50 pt-20">
       <div className="container mx-auto px-4 py-8">
-        <button onClick={() => navigate(-1)} className="inline-flex items-center text-gray-600 hover:text-yellow-600 mb-6">
+        <button onClick={() => navigate(-1)} className="inline-flex items-center text-gray-600 hover:text-blue-900 mb-6">
           <ArrowLeft className="h-5 w-5 mr-2" />
           Back
         </button>
@@ -102,7 +102,7 @@ const AllEquipment = () => {
                 placeholder="Search equipment..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500 w-full sm:w-64"
+                className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-900 w-full sm:w-64"
               />
             </div>
 
@@ -111,7 +111,7 @@ const AllEquipment = () => {
               <select
                 value={selectedType}
                 onChange={(e) => setSelectedType(e.target.value)}
-                className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500 appearance-none bg-white w-full sm:w-48"
+                className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-900 appearance-none bg-white w-full sm:w-48"
               >
                 {types.map((type) => (
                   <option key={type} value={type}>
@@ -164,7 +164,7 @@ const AllEquipment = () => {
 
                 <Link
                   to={`/equipment/${item.id}`}
-                  className="block w-full text-center py-3 bg-yellow-600 text-white rounded-lg font-medium transition-colors duration-300 hover:bg-yellow-700"
+                  className="block w-full text-center py-3 bg-blue-900 text-white rounded-lg font-medium transition-colors duration-300 hover:bg-blue-800"
                 >
                   View Details
                 </Link>

@@ -52,7 +52,7 @@ const Auth = () => {
     <div className="min-h-screen bg-gray-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8 bg-white p-8 rounded-xl shadow-lg">
         <div>
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
+          <h2 className="mt-6 text-center text-3xl font-extrabold text-blue-900">
             {isSignIn ? 'Sign in to your account' : 'Create your account'}
           </h2>
         </div>
@@ -144,7 +144,7 @@ const Auth = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-blue-900 mb-2">
                     <UserCircle className="inline-block h-5 w-5 mr-1" />
                     Select Account Type(s)
                   </label>
@@ -154,8 +154,8 @@ const Auth = () => {
                       onClick={() => toggleRole('renter')}
                       className={`p-4 border rounded-lg text-center transition-colors ${
                         selectedRoles.includes('renter')
-                          ? 'border-yellow-500 bg-yellow-50 text-yellow-700'
-                          : 'border-gray-300 hover:border-yellow-500'
+                          ? 'border-blue-900 bg-blue-50 text-blue-700'
+                          : 'border-gray-300 hover:border-blue-500'
                       }`}
                     >
                       <h3 className="font-semibold">Renter</h3>
@@ -166,8 +166,8 @@ const Auth = () => {
                       onClick={() => toggleRole('owner')}
                       className={`p-4 border rounded-lg text-center transition-colors ${
                         selectedRoles.includes('owner')
-                          ? 'border-yellow-500 bg-yellow-50 text-yellow-700'
-                          : 'border-gray-300 hover:border-yellow-500'
+                          ? 'border-blue-900 bg-blue-50 text-blue-700'
+                          : 'border-gray-300 hover:border-blue-500'
                       }`}
                     >
                       <h3 className="font-semibold">Owner</h3>
@@ -183,7 +183,7 @@ const Auth = () => {
             <button
               type="submit"
               disabled={loading}
-              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-lg text-white bg-yellow-600 hover:bg-yellow-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500"
+              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-lg text-white bg-blue-900 hover:bg-blue-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
             >
               {loading ? (
                 <Loader className="h-5 w-5 animate-spin" />
@@ -201,7 +201,7 @@ const Auth = () => {
                 setError('');
                 setSelectedRoles([]);
               }}
-              className="text-sm text-yellow-600 hover:text-yellow-500"
+              className="text-sm text-blue-900 hover:text-blue-800"
             >
               {isSignIn ? 'Need an account? Sign up' : 'Already have an account? Sign in'}
             </button>

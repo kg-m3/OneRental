@@ -89,7 +89,7 @@ const About = () => {
       {/* Who We Are Section */}
       <section id="about" className="py-20 bg-white">
         <div className="container mx-auto py-20 px-4 text-center">
-          <h2 className="text-3xl md:text-4xl font-bold text-gray-700 mb-6">
+          <h2 className="text-3xl md:text-4xl font-bold text-blue-800 mb-6">
             Who We Are
           </h2>
           <p className="text-lg text-gray-600 max-w-4xl mx-auto mb-12">
@@ -124,7 +124,7 @@ const About = () => {
             </div>
 
             <div className="relative  bottom-8 right-0 p-4">
-              <p className="italic text-lg">
+              <p className="italic text-lg text-blue-800">
                 "When machines are idle, opportunities are missed. We’re
                 changing that."
               </p>
@@ -149,7 +149,7 @@ const About = () => {
               }}
             ></div>
 
-            <h3 className="text-2xl font-bold text-gray-800">
+            <h3 className="text-2xl font-bold text-blue-800">
               Redefining Equipment Access Across Industries
             </h3>
             <p className="text-gray-600">

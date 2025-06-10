@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Menu, X, Truck, User, LogOut, Settings } from 'lucide-react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
-import logo from '../assets/img/OR_logo_v2.png';
+import logo from '../assets/img/1Rental_Logo_Blue.svg';
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -115,7 +115,7 @@ const Navbar = () => {
             }} 
             className="flex items-center"
           >
-            <img src={logo} alt="Logo" className="h-8 md:h-10" />
+            <img src={logo} alt="Logo" className="h-4 md:h-6" />
           </Link>
 
           {/* Desktop Menu */}
@@ -130,10 +130,7 @@ const Navbar = () => {
                     navigate(item.path);
                   }
                 }}
-                className={`px-4 py-2 hover:text-blue-500 ${
-                  shouldShowTransparentNav ? 'text-gray hover:text-blue-200'
-                                          : 'text-gray-800 hover:text-yellow-600'
-                }transition-colors`}
+                className={`px-4 py-2 text-blue-900 hover:text-blue-700 transition-colors`}
               >
                 {item.label}
               </button>
@@ -146,7 +143,7 @@ const Navbar = () => {
                 <button
                   onClick={() => setShowUserMenu(!showUserMenu)}
                   className={`flex items-center space-x-2 ${
-                    shouldShowTransparentNav ? 'text-gray' : 'text-gray-800'
+                    shouldShowTransparentNav ? 'text-blue-900' : 'text-blue-800'
                   }`}
                 >
                   <User className="h-5 w-5" />

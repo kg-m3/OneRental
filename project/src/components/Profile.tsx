@@ -221,7 +221,7 @@ const Profile = () => {
                   )}
                   <label
                     htmlFor="profile-image"
-                    className="absolute bottom-0 right-0 bg-yellow-600 text-white rounded-full p-2 cursor-pointer hover:bg-yellow-700"
+                    className="absolute bottom-0 right-0 bg-blue-900 text-white rounded-full p-2 cursor-pointer hover:bg-blue-800"
                   >
                     <Upload className="h-4 w-4" />
                   </label>
@@ -305,7 +305,7 @@ const Profile = () => {
                       <button
                         type="submit"
                         disabled={loading}
-                        className="px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700"
+                        className="px-4 py-2 bg-blue-900 text-white rounded-lg hover:bg-blue-800"
                       >
                        {loading ? (
                         <>
@@ -320,7 +320,7 @@ const Profile = () => {
                     <button
                       type="button"
                       onClick={() => setIsEditing(true)}
-                      className="px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700"
+                      className="px-4 py-2 bg-blue-900 text-white rounded-lg hover:bg-blue-800"
                     >
                       Edit Profile
                     </button>
@@ -350,7 +350,7 @@ const Profile = () => {
                       id="terms"
                       checked={termsAccepted}
                       onChange={() => setTermsAccepted(!termsAccepted)}
-                      className="w-4 h-4 text-yellow-600 focus:ring-yellow-500"
+                      className="w-4 h-4 text-blue-900 focus:ring-blue-500"
                       disabled={loading}
                     />
                     <label htmlFor="terms" className="text-sm text-gray-700">
@@ -361,7 +361,7 @@ const Profile = () => {
                     <button
                       onClick={handleAcceptTerms}
                       disabled={loading}
-                      className="mt-4 px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="mt-4 px-4 py-2 bg-blue-900 text-white rounded-lg hover:bg-blue-800 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       {loading ? (
                         <>
@@ -382,12 +382,12 @@ const Profile = () => {
               <div className="mt-8 pt-8 border-t">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-2">
-                    <Shield className="h-5 w-5 text-yellow-600" />
+                    <Shield className="h-5 w-5 text-blue-900" />
                     <h3 className="text-lg font-semibold">Account Verification</h3>
                   </div>
                   <button
                     onClick={() => setIsVerifying(true)}
-                    className="px-4 py-2 border border-yellow-600 text-yellow-600 rounded-lg hover:bg-yellow-50"
+                    className="px-4 py-2 border border-blue-900 text-blue-900 rounded-lg hover:bg-blue-50"
                   >
                     Verify Account
                   </button>

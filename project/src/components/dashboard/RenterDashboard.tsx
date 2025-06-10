@@ -196,7 +196,7 @@ const RenterDashboard = () => {
               </div>
               <div className="flex space-x-2">
                 <button
-                  className="px-3 py-3 border-2 border-yellow-600 text-yellow-600 rounded-lg font-semibold transition-all duration-300 hover:bg-yellow-600 hover:text-white"
+                  className="px-3 py-3 border-2 border-blue-900 text-blue-900 rounded-lg font-semibold transition-all duration-300 hover:bg-blue-900 hover:text-white"
                   onClick={() => {
                     // Handle payment logic
                     alert('Payment functionality coming soon!');
@@ -206,7 +206,7 @@ const RenterDashboard = () => {
                 </button>
                 <Link
                   to={`/equipment/${booking.equipment_id}`}
-                  className="px-3 py-3 border-2 border-yellow-600 text-yellow-600 rounded-lg font-semibold transition-all duration-300 hover:bg-yellow-600 hover:text-white"
+                  className="px-3 py-3 border-2 border-blue-900 text-blue-900 rounded-lg font-semibold transition-all duration-300 hover:bg-blue-900 hover:text-white"
                   onClick={(e) => e.stopPropagation()}
                 >
                   View Equipment
@@ -226,7 +226,7 @@ const RenterDashboard = () => {
               <div className="flex space-x-2">
                 <Link
                   to={`/equipment/${booking.equipment_id}`}
-                  className="px-3 py-3 border-2 border-yellow-600 text-yellow-600 rounded-lg font-semibold transition-all duration-300 hover:bg-yellow-600 hover:text-white"
+                  className="px-3 py-3 border-2 border-blue-900 text-blue-900 rounded-lg font-semibold transition-all duration-300 hover:bg-blue-900 hover:text-white"
                   onClick={(e) => e.stopPropagation()}
                 >
                   View Equipment
@@ -250,7 +250,7 @@ const RenterDashboard = () => {
               <p className="text-gray-500">Active Rentals</p>
               <h3 className="text-2xl font-bold">{stats.activeBookings}</h3>
             </div>
-            <Calendar className="h-8 w-8 text-yellow-600" />
+            <Calendar className="h-8 w-8 text-blue-900" />
           </div>
         </div>
 
@@ -260,7 +260,7 @@ const RenterDashboard = () => {
               <p className="text-gray-500">Pending Requests</p>
               <h3 className="text-2xl font-bold">{stats.pendingBookings}</h3>
             </div>
-            <Clock className="h-8 w-8 text-yellow-600" />
+            <Clock className="h-8 w-8 text-blue-900" />
           </div>
         </div>
 
@@ -270,7 +270,7 @@ const RenterDashboard = () => {
               <p className="text-gray-500">Total Bookings</p>
               <h3 className="text-2xl font-bold">{stats.totalBookings}</h3>
             </div>
-            <CheckCircle className="h-8 w-8 text-yellow-600" />
+            <CheckCircle className="h-8 w-8 text-blue-900" />
           </div>
         </div>
       </div>
@@ -281,7 +281,7 @@ const RenterDashboard = () => {
         <div className="flex space-x-4">
           <Link
             to="/all-equipment"
-            className="flex-1 bg-yellow-600 text-white rounded-lg p-4 flex items-center justify-center hover:bg-yellow-700 transition-colors"
+            className="flex-1 bg-blue-900 text-white rounded-lg p-4 flex items-center justify-center hover:bg-blue-800 transition-colors"
           >
             <Search className="h-5 w-5 mr-2" />
             Browse Equipment
@@ -298,7 +298,7 @@ const RenterDashboard = () => {
           {isLoading && bookings.length === 0 && (
             <div className="bg-white rounded-lg shadow-md p-6">
               <div className="flex items-center justify-center min-h-[200px]">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-yellow-600"></div>
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-900"></div>
               </div>
             </div>
           )}

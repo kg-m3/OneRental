@@ -118,7 +118,7 @@ const ListEquipment = () => {
   return (
     <div className="min-h-screen bg-gray-50 pt-20">
       <div className="container mx-auto px-4 py-8">
-        <button onClick={() => navigate(-1)} className="inline-flex items-center text-gray-600 hover:text-yellow-600 mb-6">
+        <button onClick={() => navigate(-1)} className="inline-flex items-center text-gray-600 hover:text-blue-900 mb-6">
           <ArrowLeft className="h-5 w-5 mr-2" />
           Back
         </button>
@@ -252,7 +252,7 @@ const ListEquipment = () => {
                 <button
                   type="button"
                   onClick={addFeature}
-                  className="text-yellow-600 hover:text-yellow-700 font-medium"
+                  className="text-blue-900 hover:text-blue-800 font-medium"
                 >
                   + Add Feature
                 </button>
@@ -267,7 +267,7 @@ const ListEquipment = () => {
               </h2>
               
               <div className="space-y-4">
-                <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
+                <div className="border-2 border-dashed border-blue-800 rounded-lg p-8 text-center">
                   <input
                     type="file"
                     multiple
@@ -278,7 +278,7 @@ const ListEquipment = () => {
                   />
                   <label
                     htmlFor="images"
-                    className="cursor-pointer text-yellow-600 hover:text-yellow-700 font-medium"
+                    className="cursor-pointer text-blue-900 hover:text-blue-800 font-medium"
                   >
                     Click to upload images
                   </label>
@@ -316,7 +316,7 @@ const ListEquipment = () => {
             {/* Submit Button */}
             <button
               type="submit"
-              className="w-full py-4 bg-yellow-600 text-white rounded-lg font-semibold hover:bg-yellow-700 transition-colors shadow-lg"
+              className="w-full py-4 bg-blue-900 text-white rounded-lg font-semibold hover:bg-blue-800 transition-colors shadow-lg"
             >
               List Equipment
             </button>
