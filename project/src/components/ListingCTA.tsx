@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom';
 
 const ListingCTA = () => {
   return (
-    <section className="py-20 bg-gray-800 relative overflow-hidden">
+    <section className="py-20 bg-blue-800 relative overflow-hidden">
       {/* Background Pattern */}
       <div className="absolute inset-0 opacity-10">
         <div className="absolute top-0 left-0 right-0 h-32 bg-white transform -skew-y-6 origin-top-left"></div>

@@ -30,7 +30,7 @@ const Dashboard = () => {
 
   if (!user || !activeRole) {
     return <div className="min-h-screen bg-gray-50 pt-20 flex items-center justify-center">
-      <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-yellow-600"></div>
+      <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-900"></div>
     </div>;
   }
 
@@ -45,8 +45,8 @@ const Dashboard = () => {
                 onClick={() => setActiveRole(role)}
                 className={`px-6 py-2 rounded-lg font-medium transition-colors ${
                   activeRole === role
-                    ? 'bg-yellow-600 text-white'
-                    : 'bg-white text-gray-600 hover:bg-yellow-50'
+                    ? 'bg-blue-900 text-white'
+                    : 'bg-white text-gray-600 hover:bg-blue-50'
                 }`}
               >
                 {role.charAt(0).toUpperCase() + role.slice(1)} Dashboard

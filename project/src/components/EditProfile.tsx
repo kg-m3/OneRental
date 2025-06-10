@@ -92,7 +92,7 @@ const EditProfile: React.FC<EditProfileProps> = ({ profile, onSave, onClose }) =
               type="text"
               value={formData.business_registration}
               onChange={(e) => setFormData({ ...formData, business_registration: e.target.value })}
-              className="px-4 py-2 w-full border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500"
+              className="px-4 py-2 w-full border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               placeholder="Enter registration number"
             />
           </div>
@@ -107,7 +107,7 @@ const EditProfile: React.FC<EditProfileProps> = ({ profile, onSave, onClose }) =
             </button>
             <button
               type="submit"
-              className="px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700"
+              className="px-4 py-2 bg-blue-900 text-white rounded-lg hover:bg-blue-800"
             >
               Save Changes
             </button>

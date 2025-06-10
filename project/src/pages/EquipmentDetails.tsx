@@ -260,7 +260,7 @@ const EquipmentDetails = () => {
   return (
     <div className="min-h-screen bg-gray-50 pt-20">
       <div className="container mx-auto px-4 py-8">
-        <button onClick={() => navigate(-1)} className="inline-flex items-center text-gray-600 hover:text-yellow-600 mb-6">
+        <button onClick={() => navigate(-1)} className="inline-flex items-center text-gray-600 hover:text-blue-900 mb-6">
           <ArrowLeft className="h-5 w-5 mr-2" />
           Back to Equipment
         </button>
@@ -283,11 +283,11 @@ const EquipmentDetails = () => {
                     <button
                       key={index}
                       onClick={() => handleImageChange(index)}
-                      className={`w-2 h-2 rounded-full transition-all duration-300 ${
+                      className="w-2 h-2 rounded-full transition-all duration-300 ${
                         index === currentImageIndex 
-                          ? 'bg-yellow-600' 
+                          ? 'bg-blue-900' 
                           : 'bg-gray-300 hover:bg-gray-400'
-                      }`}
+                      }"
                     />
                   ))}
                 </div>
@@ -326,7 +326,7 @@ const EquipmentDetails = () => {
 
               <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg mb-6">
                 <div className="flex items-center">
-                  <HandCoins className="h-6 w-6 text-yellow-600 mr-2" />
+                  <HandCoins className="h-6 w-6 text-blue-900 mr-2" />
                   <div>
                     <p className="text-2xl font-bold text-gray-800">R{equipment?.rate}</p>
                     <p className="text-sm text-gray-500">per day</p>
@@ -342,7 +342,7 @@ const EquipmentDetails = () => {
                       setShowBookingModal(true);
                     }
                   }}
-                  className="px-6 py-3 bg-yellow-600 text-white rounded-lg font-semibold hover:bg-yellow-700 transition-colors"
+                  className="px-6 py-3 bg-blue-900 text-white rounded-lg font-semibold hover:bg-blue-800 transition-colors"
                 >
                   Book Now
                 </button>
@@ -358,7 +358,7 @@ const EquipmentDetails = () => {
                       <span className="ml-1">{equipment.owner.rating}</span>
                     </div> */}
                   </div>
-                  {/* <button className="px-4 py-2 border border-yellow-600 text-yellow-600 rounded-lg hover:bg-yellow-50 hover:text-yellow-600 transition-colors">
+                  {/* <button className="px-4 py-2 border border-blue-900 text-blue-900 rounded-lg hover:bg-blue-50 hover:text-blue-900 transition-colors">
                     Contact
                   </button> */}
                 </div>
@@ -367,16 +367,16 @@ const EquipmentDetails = () => {
 
             <div className="bg-white p-6 rounded-lg shadow-lg">
               <div className="flex items-center mb-4">
-                <Shield className="h-5 w-5 text-yellow-600 mr-2" />
+                <Shield className="h-5 w-5 text-blue-900 mr-2" />
                 <h3 className="text-lg font-semibold">Rental Protection</h3>
               </div>
               <ul className="space-y-3 text-gray-600">
                 <li className="flex items-center">
-                  <span className="h-2 w-2 bg-yellow-600 rounded-full mr-2"></span>
+                  <span className="h-2 w-2 bg-blue-900 rounded-full mr-2"></span>
                   Verified equipment provider
                 </li>
                 <li className="flex items-center">
-                  <span className="h-2 w-2 bg-yellow-600 rounded-full mr-2"></span>
+                  <span className="h-2 w-2 bg-blue-900 rounded-full mr-2"></span>
                   Secure payments through our platform
                 </li>
                 {/* <li className="flex items-center">
@@ -422,7 +422,7 @@ const EquipmentDetails = () => {
                     setAuthState('loading'); // Reset to loading state
                     window.location.href = '/auth';
                   }}
-                  className="px-6 py-3 border-2 border-yellow-600 text-yellow-600 rounded-lg font-semibold hover:bg-yellow-50 transition-colors"
+                  className="px-6 py-3 border-2 border-blue-900 text-blue-900 rounded-lg font-semibold hover:bg-blue-50 transition-colors"
                 >
                   Create Account
                 </button> */}
@@ -524,7 +524,7 @@ const EquipmentDetails = () => {
               <div className="flex justify-end pt-4 px-6">
                 <button
                   type="submit"
-                  className="w-full py-3 bg-yellow-600 text-white rounded-lg font-semibold hover:bg-yellow-700 transition-colors"
+                  className="w-full py-3 bg-blue-900 text-white rounded-lg font-semibold hover:bg-blue-800 transition-colors"
                 >
                   Submit Booking Request
                 </button>

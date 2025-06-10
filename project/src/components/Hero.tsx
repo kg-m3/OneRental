@@ -24,7 +24,7 @@ const Hero = () => {
 
       {/* Content */}
       <div className="container mx-auto px-4 relative z-10 text-center">
-        <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-gray mb-6 leading-tight">
+        <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-blue-900 mb-6 leading-tight">
           <span className="inline-block transform transition-transform duration-700 ease-in-out hover:scale-105">
             Build Big. Build Smart.
           </span>{' '}
@@ -34,7 +34,7 @@ const Hero = () => {
               src="/src/assests/img/OR_logo-small.png"
               className="h-30 md:h-16"
             /> */}
-           <span className="text-gray bg-clip-text">
+           <span className="text-blue-900 bg-clip-text">
             OneRental.
           </span>
           </span>
