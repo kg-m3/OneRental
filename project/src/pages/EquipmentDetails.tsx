@@ -75,7 +75,7 @@ const EquipmentDetails = () => {
     'https://images.unsplash.com/photo-1610477865545-37711c53144d?q=80&w=2047&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
   ];
   // Use mock images if equipment images are not available
-  const imagesToShow = equipment?.images?.map(img => img.image_url) || mockImages;
+  const imagesToShow = equipment?.images?.map(img => img.image_url);
   const handleImageChange = (index: number) => {
     setCurrentImageIndex(index);
   };
