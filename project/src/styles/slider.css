@@ -1,49 +1,93 @@
 .slick-dots {
   position: absolute;
-  bottom: -25px;
-  left: 50%;
-  transform: translateX(-50%);
-  display: flex;
-  gap: 8px;
-  margin: 0;
-  padding: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  margin: 0 auto;
+  width: fit-content;
   list-style: none;
-  z-index: 1;
-  pointer-events: all;
-  background: rgba(255, 255, 255, 0.8);
+  padding: 0;
+  margin-bottom: 20px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  z-index: 10;
+  /* background: rgba(255, 255, 255, 0.9); */
   border-radius: 20px;
   padding: 8px;
+  transform: none;
+}
+
+/* Desktop styles */
+@media (min-width: 1024px) {
+  .slick-dots {
+    margin-bottom: 5px;
+    gap: 12px;
+  }
+  
+  .slick-dots button {
+    width: 10px;
+    height: 10px;
+  }
+}
+
+/* Tablet styles */
+@media (max-width: 1023px) and (min-width: 768px) {
+  .slick-dots {
+    margin-bottom: 5px;
+    gap: 10px;
+  }
+  
+  .slick-dots button {
+    width: 9px;
+    height: 9px;
+  }
+}
+
+/* Mobile styles */
+@media (max-width: 767px) {
+  .slick-dots {
+    margin-bottom: 5px;
+    gap: 8px;
+  }
+  
+  .slick-dots button {
+    width: 8px;
+    height: 8px;
+  }
 }
 
 .slick-dots li {
-  display: inline-block;
   cursor: pointer;
+  padding: 0;
+  margin: 0;
 }
 
 .slick-dots button {
-  width: 8px;
-  height: 8px;
   border-radius: 50%;
-  background-color: #d1d5db;
+  background-color: rgba(0, 0, 0, 0.2);
   border: none;
   cursor: pointer;
-  outline: none;
   padding: 0;
   margin: 0;
-  transition: background-color 0.3s ease;
-  pointer-events: all;
+  transition: all 0.3s ease;
 }
 
-.slick-dots button:hover {
-  background-color: #94a3b8;
+.slick-dots button:hover,
+.slick-dots button:focus {
+  background-color: rgba(0, 0, 0, 0.5);
+  outline: none;
 }
 
-.slick-dots button.slick-active {
-  background-color: #1e40af;
+.slick-dots li.slick-active button {
+  /* background-color: #1e40af; */
+  transform: scale(1.2);
 }
 
-.slick-dots button.slick-active:hover {
-  background-color: #1d4ed8;
+.slick-dots li button:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(30, 64, 175, 0.3);
 }
 
 /* Accessibility overrides */
