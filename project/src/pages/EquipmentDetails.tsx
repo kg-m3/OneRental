@@ -2,7 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Calendar, MapPin, PenTool as Tool, HandCoins, Shield, ArrowLeft, X, Clock, AlertTriangle } from 'lucide-react';
 import { supabase } from '../lib/supabase';
-import { useDrag } from '@use-gesture/react';
+import Slider from 'react-slick';
+import 'slick-carousel/slick/slick.css';
+import 'slick-carousel/slick/slick-theme.css';
+import '../styles/slider.css';
 
 interface Equipment {
   id: string;
@@ -63,39 +66,69 @@ const EquipmentDetails = () => {
   const [duration, setDuration] = useState(0);
   const [totalAmount, setTotalAmount] = useState(0);
 
+  const [images, setImages] = useState<string[]>([]);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  const [images, setImages] = useState<string[]>([]);  const [dragging, setDragging] = useState(false);
-  const [dragOffset, setDragOffset] = useState(0);
 
   // Get images from equipment object
   const imagesToShow = equipment?.images?.map(img => img.image_url) || [];
-  const handleImageChange = (index: number) => {
-    setCurrentImageIndex(index);
+
+  const sliderSettings = {
+    dots: true,
+    infinite: false,
+    speed: 500,
+    slidesToShow: 1,
+    slidesToScroll: 1,
+    autoplay: false,
+    beforeChange: (current: number, next: number) => setCurrentImageIndex(next),
+    dotsClass: 'slick-dots',
+    customPaging: (i: number) => (
+      <button
+        type="button"
+        className={`w-2 h-2 rounded-full transition-colors duration-300 ${
+          i === currentImageIndex ? 'bg-blue-900' : 'bg-gray-300'
+        }`}
+        aria-label={`Go to slide ${i + 1}`}
+        tabIndex={i === currentImageIndex ? 0 : -1}
+      />
+    ),
+    arrows: true,
+    draggable: true,
+    swipe: true,
+    touchMove: true,
+    accessibility: true,
+    focusOnSelect: true,
+    responsive: [
+      {
+        breakpoint: 1024,
+        settings: {
+          slidesToShow: 1,
+          slidesToScroll: 1,
+          dots: true,
+          dotsClass: 'slick-dots'
+        }
+      },
+      {
+        breakpoint: 600,
+        settings: {
+          slidesToShow: 1,
+          slidesToScroll: 1,
+          dots: true,
+          dotsClass: 'slick-dots'
+        }
+      },
+      {
+        breakpoint: 480,
+        settings: {
+          slidesToShow: 1,
+          slidesToScroll: 1,
+          dots: true,
+          dotsClass: 'slick-dots'
+        }
+      }
+    ]
   };
 
-  // Swipe gesture handler with improved transitions
-  const swipeHandler = useDrag(({ active, movement: [mx], offset: [ox], velocity: [vx] }) => {
-    setDragging(active);
-    setDragOffset(ox);
 
-    // Calculate swipe velocity for better momentum
-    const swipeVelocity = vx > 0 ? 1 : vx < 0 ? -1 : 0;
-    const swipeThreshold = Math.abs(ox) > 50 || Math.abs(vx) > 0.5;
-
-    if (!active && swipeThreshold) {
-      // Calculate new index with momentum
-      const newIndex = Math.max(0, Math.min(
-        (currentImageIndex + swipeVelocity + imagesToShow.length) % imagesToShow.length,
-        imagesToShow.length - 1
-      ));
-      setCurrentImageIndex(newIndex);
-      
-      // Reset drag offset with smooth animation
-      setTimeout(() => {
-        setDragOffset(0);
-      }, 100);
-    }
-  });
 
   useEffect(() => {
     // Get current user
@@ -327,10 +360,6 @@ const EquipmentDetails = () => {
     }
   };
 
-  // const handleImageChange = (index: number) => {
-  //   setCurrentImageIndex(index);
-   // Add this JSX where you want the slider to appear:S
-  // };
   return (
     <div className="min-h-screen bg-gray-50 pt-20">
       <div className="container mx-auto px-4 py-8">
@@ -340,39 +369,22 @@ const EquipmentDetails = () => {
         </button>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Left Column - Images */}
-          <div className="space-y-6">
-            <div className="bg-white rounded-lg shadow-lg overflow-hidden">
-              <div {...swipeHandler()} className="relative w-full">
-                <div className="relative w-full h-[400px] overflow-hidden">
-                  <img
-                    src={imagesToShow[currentImageIndex]}
-                    alt={equipment?.title || 'Equipment'}
-                    className="w-full h-full object-cover transition-transform duration-300"
-                    style={{
-                      transform: `translateX(${dragging ? dragOffset : 0}px)`
-                    }}
-                  />
-               
-                {dragging && (
-                  <div className="absolute inset-0 bg-black/50 rounded-lg pointer-events-none"></div>
-                )}
-                <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex space-x-2">
-                  {imagesToShow.map((_, index) => (
-                    <button
-                      key={index}
-                      onClick={() => handleImageChange(index)}
-                      className={`w-2 h-2 rounded-full transition-all duration-300 ${
-                        index === currentImageIndex 
-                          ? 'bg-blue-900' 
-                          : 'bg-gray-300 hover:bg-gray-400'
-                      }`}
+          {/* Image Slider */}
+          <div className="relative mb-8">
+            <div className="w-full h-[400px] rounded-lg overflow-hidden">
+              <Slider {...sliderSettings}>
+                {imagesToShow.map((url, index) => (
+                  <div key={index} className="w-full h-full">
+                    <img
+                      src={url}
+                      alt={`${equipment?.title} ${index + 1}`}
+                      className="w-full h-full object-cover rounded-lg"
                     />
-                  ))}
-                </div>
-              </div>
-              </div>
+                  </div>
+                ))}
+              </Slider>
             </div>
+          </div>
             
             {/* <div className="bg-white p-6 rounded-lg shadow-lg">
               <h3 className="text-xl font-bold mb-4">Features & Specifications</h3>
@@ -385,7 +397,7 @@ const EquipmentDetails = () => {
                 ))}
               </ul>
             </div> */}
-          </div>
+          
 
           {/* Right Column - Details */}
           <div className="space-y-6">
