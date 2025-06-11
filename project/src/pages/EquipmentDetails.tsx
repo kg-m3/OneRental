@@ -370,15 +370,19 @@ const EquipmentDetails = () => {
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Image Slider */}
-          <div className="relative mb-8">
-            <div className="w-full h-[400px] rounded-lg overflow-hidden">
+          <div className="relative mb-2">
+            <div className="w-full aspect-video rounded-lg overflow-hidden relative">
               <Slider {...sliderSettings}>
                 {imagesToShow.map((url, index) => (
-                  <div key={index} className="w-full h-full">
+                  <div key={index} className="w-full h-full aspect-video">
                     <img
                       src={url}
                       alt={`${equipment?.title} ${index + 1}`}
-                      className="w-full h-full object-cover rounded-lg"
+                      className="w-full h-full object-cover"
+                      style={{
+                        objectFit: 'cover',
+                        objectPosition: 'center'
+                      }}
                     />
                   </div>
                 ))}
