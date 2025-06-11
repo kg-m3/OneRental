@@ -1,0 +1,90 @@
+.slick-dots {
+  position: absolute;
+  bottom: -25px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  z-index: 1;
+  pointer-events: all;
+  background: rgba(255, 255, 255, 0.8);
+  border-radius: 20px;
+  padding: 8px;
+}
+
+.slick-dots li {
+  display: inline-block;
+  cursor: pointer;
+}
+
+.slick-dots button {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: #d1d5db;
+  border: none;
+  cursor: pointer;
+  outline: none;
+  padding: 0;
+  margin: 0;
+  transition: background-color 0.3s ease;
+  pointer-events: all;
+}
+
+.slick-dots button:hover {
+  background-color: #94a3b8;
+}
+
+.slick-dots button.slick-active {
+  background-color: #1e40af;
+}
+
+.slick-dots button.slick-active:hover {
+  background-color: #1d4ed8;
+}
+
+/* Accessibility overrides */
+.slick-slide {
+  pointer-events: all !important;
+  outline: none !important;
+  position: relative;
+}
+
+.slick-slide[aria-hidden="true"] {
+  pointer-events: auto !important;
+  outline: none !important;
+  position: relative;
+}
+
+.slick-slide[aria-hidden="true"] * {
+  pointer-events: auto !important;
+  outline: none !important;
+}
+
+.slick-slide:focus,
+.slick-slide:focus-within {
+  outline: none !important;
+}
+
+.slick-slide:focus-visible {
+  outline: 2px solid #1e40af;
+  outline-offset: 2px;
+}
+
+/* Fix for cloned slides */
+.slick-slide.slick-cloned {
+  display: block !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  position: relative;
+}
+
+.slick-slide.slick-cloned [aria-hidden="true"] {
+  display: block !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  position: relative;
+}
