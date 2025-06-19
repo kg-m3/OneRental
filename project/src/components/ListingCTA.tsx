@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { ShieldCheck, Clock, HandCoins, X } from 'lucide-react';
 import { useAuth } from '../context/authContext';
-import ListingModal from './ListingModal';
+
 import { useState } from 'react';
 
 const ListingCTA = () => {
