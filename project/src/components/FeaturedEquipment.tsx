@@ -161,6 +161,7 @@ const FeaturedEquipment = () => {
                 <Link
                   to={`/equipment/${item.id}`}
                   className="block w-full text-center py-3 bg-blue-900 text-white rounded-lg font-medium transition-colors duration-300 hover:bg-blue-800"
+                  onClick={() => window .scrollTo(0, 0)}
                 >
                   View Details
                 </Link>
@@ -173,6 +174,7 @@ const FeaturedEquipment = () => {
           <Link
             to="/all-equipment"
             className="px-8 py-3 border-2 border-blue-800 text-blue-900 rounded-lg font-semibold transition-all duration-300 hover:bg-blue-800 hover:text-white"
+            onClick={() => window.scrollTo(0, 0)}
           >
             View All Equipment
           </Link>

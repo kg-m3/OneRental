@@ -59,6 +59,7 @@ const HowItWorks = () => {
           <Link
             to="/all-equipment"
             className="px-8 py-3 border-2 border-blue-800 text-blue-900 rounded-lg font-semibold transition-all duration-300 hover:bg-blue-800 hover:text-white"
+            onClick={() => window.scrollTo(0, 0)}
           >
             Start Browsing
           </Link>

@@ -131,7 +131,7 @@ const Footer = () => {
         {/* Copyright */}
         <div className="border-t border-gray-800 mt-12 pt-6 text-center text-gray-500">
           <p>
-            &copy; {new Date().getFullYear()} OneRental. All rights reserved.
+            CoreFinity (Pty) Ltd t/a OneRental &copy; {new Date().getFullYear()} OneRental. All rights reserved.
           </p>
           <div className="mt-2 space-x-4 text-sm">
             <a href="#" className="hover:text-yellow-500 transition-colors">
