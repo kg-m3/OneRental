@@ -6,6 +6,7 @@ import Slider from 'react-slick';
 import 'slick-carousel/slick/slick.css';
 import 'slick-carousel/slick/slick-theme.css';
 import '../styles/slider.css';
+import axios from 'axios';
 
 interface Equipment {
   id: string;
@@ -52,6 +53,7 @@ const EquipmentDetails = () => {
   const { id } = useParams();
   const [showBookingModal, setShowBookingModal] = useState(false);
   const [showLoginModal, setShowLoginModal] = useState(false);
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [authState, setAuthState] = useState<'checking' | 'authenticated' | 'unauthenticated'>('checking');
   const [user, setUser] = useState<any>(null);
   const [bookingData, setBookingData] = useState<BookingData>({
@@ -65,6 +67,8 @@ const EquipmentDetails = () => {
 
   const [duration, setDuration] = useState(0);
   const [totalAmount, setTotalAmount] = useState(0);
+  const [bookingId, setBookingId] = useState<string | null>(null);
+  const [paymentStatus, setPaymentStatus] = useState<'pending' | 'success' | 'failed'>('pending');
 
   const [images, setImages] = useState<string[]>([]);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
@@ -127,8 +131,6 @@ const EquipmentDetails = () => {
       }
     ]
   };
-
-
 
   useEffect(() => {
     // Get current user
@@ -313,8 +315,6 @@ const EquipmentDetails = () => {
     }
 
     try {
-
-
       // Calculate total amount
       const days = calculateDuration(bookingData.startDate, bookingData.endDate);
       if (days <= 0) {
@@ -323,11 +323,9 @@ const EquipmentDetails = () => {
       }
 
       const total = days * equipment.rate;
-      console.log(equipment);
-      console.log(bookingData);
-      console.log( user);
-      // Insert booking request
-      const { error: bookingError } = await supabase
+
+      // Insert booking request with 'pending_payment' status
+      const { data: booking, error: bookingError } = await supabase
         .from('bookings')
         .insert([
           {
@@ -345,18 +343,34 @@ const EquipmentDetails = () => {
 
       if (bookingError) throw bookingError;
 
-      // Show success message
-      setError('Booking request sent successfully! The owner will contact you shortly.');
+      // Store booking ID for payment processing
+      setBookingId(booking.id);
+      
+      // Show payment modal
       setShowBookingModal(false);
-      setBookingData({
-        startDate: '',
-        endDate: '',
-        notes: ''
-      });
-      setError('');
+      setShowPaymentModal(true);
     } catch (err: any) {
       console.error('Error booking:', err);
       setError(err.message || 'Failed to send booking request. Please try again.');
+    }
+  };
+
+  const handleFNBPayment = async () => {
+    try {
+      // Generate FNB payment request
+      const response = await axios.post('/api/fnb-payment', {
+        bookingId: bookingId,
+        amount: totalAmount,
+        userId: user?.id,
+        equipmentId: equipment?.id
+      });
+
+      // Redirect to FNB payment gateway
+      window.location.href = response.data.paymentUrl;
+    } catch (error) {
+      console.error('Payment error:', error);
+      setPaymentStatus('failed');
+      setError('Payment processing failed. Please try again.');
     }
   };
 
@@ -365,14 +379,14 @@ const EquipmentDetails = () => {
       <div className="container mx-auto px-4 py-8">
         <button onClick={() => navigate(-1)} className="inline-flex items-center text-gray-600 hover:text-blue-900 mb-6">
           <ArrowLeft className="h-5 w-5 mr-2" />
-          Back to Equipment
+          Back
         </button>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Image Slider */}
           <div className="relative mb-2">
             <div className="w-full aspect-video rounded-lg overflow-hidden relative">
-              <Slider {...sliderSettings}>
+              <Slider {...sliderSettings} className="w-full">
                 {imagesToShow.map((url, index) => (
                   <div key={index} className="w-full h-full aspect-video">
                     <img
@@ -389,7 +403,7 @@ const EquipmentDetails = () => {
               </Slider>
             </div>
           </div>
-            
+
             {/* <div className="bg-white p-6 rounded-lg shadow-lg">
               <h3 className="text-xl font-bold mb-4">Features & Specifications</h3>
               <ul className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -622,10 +636,41 @@ const EquipmentDetails = () => {
                   type="submit"
                   className="w-full py-3 bg-blue-900 text-white rounded-lg font-semibold hover:bg-blue-800 transition-colors"
                 >
-                  Submit Booking Request
+                  Continue to Payment
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Payment Modal */}
+      {showPaymentModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex flex-col justify-center items-center p-4 z-50">
+          <div className="bg-white rounded-lg shadow-xl max-w-md w-full">
+            <div className="flex justify-between items-center p-6 border-b">
+              <h2 className="text-xl font-bold text-gray-800">Payment</h2>
+              <button
+                onClick={() => setShowPaymentModal(false)}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                <X className="h-6 w-6" />
+              </button>
+            </div>
+
+            <div className="p-6 space-y-4">
+              <p className="text-gray-600 text-center">
+                Please select a payment method to complete your booking.
+              </p>
+              <div className="flex flex-col gap-4">
+                <button
+                  onClick={handleFNBPayment}
+                  className="px-6 py-3 bg-blue-900 text-white rounded-lg font-semibold hover:bg-blue-800 transition-colors"
+                >
+                  Pay with FNB
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}

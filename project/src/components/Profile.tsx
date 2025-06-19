@@ -219,12 +219,12 @@ const Profile = () => {
                   ) : (
                     <User className="h-24 w-24 text-gray-400 border-2 rounded-full p-4" />
                   )}
-                  <label
+                  {/* <label
                     htmlFor="profile-image"
                     className="absolute bottom-0 right-0 bg-blue-900 text-white rounded-full p-2 cursor-pointer hover:bg-blue-800"
                   >
                     <Upload className="h-4 w-4" />
-                  </label>
+                  </label> */}
                   <input
                     type="file"
                     id="profile-image"

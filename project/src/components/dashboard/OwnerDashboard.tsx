@@ -21,7 +21,9 @@ interface Equipment {
     id: string;
     image_url: string;
     is_main: boolean;
+    equipment_id: string;
   }[];
+  owner_id: string;
 };
 
 interface Booking {
@@ -86,14 +88,39 @@ const OwnerDashboard = () => {
     location: '',
     rate: 0,
     status: '',
-    images: [] as { id: string; image_url: string; is_main: boolean }[],
+    equipment_images: [] as {
+      id: string;
+      image_url: string;
+      is_main: boolean;
+      equipment_id: string;
+    }[],
+    owner_id: ''
   });
 
-  const handleImageDelete = (imageId: string) => {
-    setEditFormData(prev => ({
-      ...prev,
-      images: prev.images.filter(img => img.id !== imageId)
-    }));
+  const handleImageDelete = async (imageId: string) => {
+    try {
+      // Get the image path from the existing images
+      const image = editFormData.equipment_images.find(img => img.id === imageId);
+      if (!image) throw new Error('Image not found');
+
+      // Delete from storage
+      const { error: storageError } = await supabase.storage
+        .from('equipment-images')
+        .remove([`equipment/${selectedEquipment?.id}/${imageId}`]);
+
+      if (storageError) throw storageError;
+
+      // Update form data
+      setEditFormData(prev => ({
+        ...prev,
+        equipment_images: prev.equipment_images.filter(img => img.id !== imageId)
+      }));
+
+      alert('Image deleted successfully!');
+    } catch (error) {
+      console.error('Error deleting image:', error);
+      alert('Failed to delete image. Please try again.');
+    }
   };
 
   const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -101,24 +128,53 @@ const OwnerDashboard = () => {
     if (!file) return;
 
     try {
-      const { error } = await supabase.storage
+      // Check if file is an image and has allowed extension
+      const allowedExtensions = ['jpg', 'jpeg', 'png', 'webp'];
+      const fileExtension = file.name.split('.').pop()?.toLowerCase();
+      
+      if (!allowedExtensions.includes(fileExtension)) {
+        alert('Only JPG, JPEG, PNG, and WEBP files are allowed.');
+        return;
+      }
+
+      // Generate a unique filename with timestamp
+      const fileName = `${Date.now()}-${file.name}`;
+      // Check if selectedEquipment exists
+      if (!selectedEquipment) {
+        alert('Please select an equipment first.');
+        return;
+      }
+
+      // Use simple path: public/equipment_id/filename
+      const filePath = `public/${selectedEquipment.id}/${fileName}`;
+
+      // Upload to storage
+      const { error: uploadError } = await supabase.storage
         .from('equipment-images')
-        .upload(`equipment-${selectedEquipment?.id}/${file.name}`, file);
+        .upload(filePath, file, {
+          cacheControl: '3600',
+          upsert: false
+        });
 
-      if (error) throw error;
+      if (uploadError) throw uploadError;
 
+      // Get public URL
       const { data: { publicUrl } } = supabase.storage
         .from('equipment-images')
-        .getPublicUrl(`equipment-${selectedEquipment?.id}/${file.name}`);
+        .getPublicUrl(filePath);
 
+      // Update form data
       setEditFormData(prev => ({
         ...prev,
-        images: [...prev.images, {
-          id: Date.now().toString(),
+        equipment_images: [...prev.equipment_images, {
+          id: fileName,
           image_url: publicUrl,
-          is_main: false
+          is_main: false,
+          equipment_id: selectedEquipment?.id || ''
         }]
       }));
+
+      alert('Image uploaded successfully!');
     } catch (error) {
       console.error('Error uploading image:', error);
       alert('Failed to upload image. Please try again.');
@@ -141,7 +197,8 @@ const OwnerDashboard = () => {
       location: equipment.location,
       rate: equipment.rate,
       status: equipment.status,
-      images: equipment.equipment_images,
+      equipment_images: equipment.equipment_images,
+      owner_id: equipment.owner_id
     });
     setIsEditModalOpen(true);
   };
@@ -157,12 +214,46 @@ const OwnerDashboard = () => {
   const handleEditSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const { error } = await supabase
+      // First update the equipment table
+      const equipmentData = {
+        title: editFormData.title,
+        type: editFormData.type,
+        description: editFormData.description,
+        location: editFormData.location,
+        rate: editFormData.rate,
+        status: editFormData.status,
+        owner_id: editFormData.owner_id
+      };
+
+      const { error: equipmentError } = await supabase
         .from('equipment')
-        .update(editFormData)
+        .update(equipmentData)
         .eq('id', selectedEquipment?.id);
 
-      if (error) throw error;
+      if (equipmentError) throw equipmentError;
+
+      // Then update the equipment_images table
+      if (editFormData.equipment_images.length > 0) {
+        // Prepare images data without IDs for new images
+        const imagesToUpdate = editFormData.equipment_images.map(img => {
+          // Only include ID if it exists and is a valid UUID
+          const image: { id?: string; image_url: string; is_main: boolean; equipment_id: string } = {
+            image_url: img.image_url,
+            is_main: img.is_main,
+            equipment_id: selectedEquipment?.id || ''
+          };
+          if (img.id && img.id.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i)) {
+            image.id = img.id;
+          }
+          return image;
+        });
+
+        const { error: imagesError } = await supabase
+          .from('equipment_images')
+          .upsert(imagesToUpdate);
+
+        if (imagesError) throw imagesError;
+      }
 
       // Update local state
       setEquipment((prev) =>
@@ -178,14 +269,15 @@ const OwnerDashboard = () => {
         location: '',
         rate: 0,
         status: '',
-        images: [{
-          id: '',
-          image_url: '',
-          is_main: true
-        }],
+        equipment_images: [],
+        owner_id: ''
       });
+
+      alert('Equipment updated successfully!');
     } catch (error) {
       console.error('Error updating equipment:', error);
+      setError('Failed to update equipment. Please try again.');
+      alert('Failed to update equipment. Please check the console for details.');
     }
   };
 
@@ -985,7 +1077,7 @@ const OwnerDashboard = () => {
                   <div className="mt-2 space-y-4">
                     {/* Existing Images */}
                     <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-                      {editFormData.images.map((image) => (
+                      {Array.isArray(editFormData.equipment_images) && editFormData.equipment_images.length > 0 && editFormData.equipment_images.map((image) => (
                         <div key={image.id} className="relative">
                           <img
                             src={image.image_url}

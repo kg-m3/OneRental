@@ -12,9 +12,11 @@ import {
   Mail,
   XCircle,
   AlertTriangle,
+  HandCoins,
 } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { useMockDataStore } from '../../store/mockDataStore';
+import axios from 'axios';
 
 interface Booking {
   id: string;
@@ -23,9 +25,10 @@ interface Booking {
   owner_id: string;
   start_date: string;
   end_date: string;
-  status: 'pending' | 'accepted' | 'rejected';
+  status: 'pending' | 'accepted' | 'rejected' | 'active';
   notes: string;
   created_at: string;
+  total_amount: number;
   equipment: {
     title: string;
     location: string;
@@ -38,7 +41,7 @@ interface Booking {
 
 const RenterDashboard = () => {
   // const { bookings } = useMockDataStore();
-  const [selectedBooking, setSelectedBooking] = useState(null);
+  const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [stats, setStats] = useState({
     activeBookings: 0,
@@ -47,6 +50,22 @@ const RenterDashboard = () => {
   });
   const [isLoading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [paymentStatus, setPaymentStatus] = useState('');
+
+  const handleFNBPayment = async (booking: Booking) => {
+    try {
+      const response = await axios.post('/api/fnb-payment', {
+        bookingId: booking.id,
+        amount: booking.total_amount,
+        userId: booking.renter_id,
+        equipmentId: booking.equipment_id
+      });
+      window.location.href = response.data.paymentUrl;
+    } catch (error) {
+      setError('Payment processing failed. Please try again.');
+      setPaymentStatus('failed');
+    }
+  };
 
   useEffect(() => {
     fetchBookings();
@@ -200,10 +219,7 @@ const RenterDashboard = () => {
               <div className="flex space-x-2">
                 <button
                   className="px-3 py-3 border-2 border-blue-900 text-blue-900 rounded-lg font-semibold transition-all duration-300 hover:bg-blue-900 hover:text-white"
-                  onClick={() => {
-                    // Handle payment logic
-                    alert('Payment functionality coming soon!');
-                  }}
+                  onClick={() => handleFNBPayment(booking)}
                 >
                   Complete Payment
                 </button>
