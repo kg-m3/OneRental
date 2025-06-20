@@ -25,6 +25,7 @@ import Dashboard from './components/Dashboard';
 import OwnerDashboard from './components/dashboard/OwnerDashboard';
 import RenterDashboard from './components/dashboard/RenterDashboard';
 import Profile from './components/Profile';
+import ScrollToTop from './components/generic/ScrollToTop';
 
 function App() {
   const { setUser, fetchUserRoles } = useAuthStore();
@@ -75,6 +76,7 @@ function App() {
   return (
     <AuthProvider>
       <Router>
+        <ScrollToTop />
         <Routes>
           {/* Public routes */}
           <Route path="/" element={
