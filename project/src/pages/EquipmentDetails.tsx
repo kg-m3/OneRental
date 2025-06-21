@@ -386,7 +386,7 @@ const EquipmentDetails = () => {
           {/* Image Slider */}
           <div className="relative mb-2">
             <div className="w-full aspect-video rounded-lg overflow-hidden relative">
-              <Slider {...sliderSettings} className="w-full">
+              <Slider key={imagesToShow.length} {...sliderSettings} className="w-full">
                 {imagesToShow.map((url, index) => (
                   <div key={index} className="w-full h-full aspect-video">
                     <img

@@ -1,15 +1,20 @@
 import { useNavigate } from 'react-router-dom';
 import { ShieldCheck, Clock, HandCoins, X } from 'lucide-react';
 import { useAuth } from '../context/authContext';
-
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 const ListingCTA = () => {
-  const { user, loading } = useAuth();
+  const { user, userRoles, loading } = useAuth();
   const navigate = useNavigate();
-  const [isModalOpen, setIsModalOpen] = useState(false);
   const [showLoginModal, setShowLoginModal] = useState(false);
 
+  useEffect(() => {
+    if (user) {
+      console.log("User in ListingCTA:", user);
+      console.log("User roles:", userRoles);
+    }
+  }, [user, userRoles]);
+  
   const handleListEquipment = () => {
     if (loading) return;
     
@@ -19,14 +24,14 @@ const ListingCTA = () => {
     }
 
     // Check if user has owner role
-    if (!user.roles?.includes('owner')) {
+    if (!userRoles.includes('owner')) {
       // Redirect to auth with a message about needing owner role
       navigate('/auth', { state: { message: 'You need to have an owner account to list equipment' } });
       return;
     }
 
-    // Open listing modal
-    setIsModalOpen(true);
+    // Navigate to list equipment page
+    navigate('/list-equipment');
   };
 
   if (loading) {
@@ -129,17 +134,6 @@ const ListingCTA = () => {
           </div>
         </div>
       </div>
-    )}
-    {isModalOpen && (
-      <ListingModal
-        onClose={() => setIsModalOpen(false)}
-        onSubmit={(data) => {
-          // Handle listing submission
-          console.log('Listing submitted:', data);
-          setIsModalOpen(false);
-          navigate('/owner-dashboard');
-        }}
-      />
     )}
     </>
   );

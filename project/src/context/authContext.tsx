@@ -4,21 +4,25 @@ import { supabase } from '../lib/supabase';
 
 const AuthContext = createContext<{
   user: any | null;
+  userRoles: string[];
   loading: boolean;
 }>({
   user: null,
+  userRoles: [],
   loading: true,
 });
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
-  const { user, setUser, fetchUserRoles } = useAuthStore();
+  const { user, setUser, userRoles, setUserRoles, fetchUserRoles } = useAuthStore();
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     // Get initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
+      console.log('Initial session:', session);
       setUser(session?.user ?? null);
       if (session?.user) {
+        // Fetch roles from database
         fetchUserRoles(session.user.id);
       }
       setLoading(false);
@@ -26,18 +30,22 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     // Listen for changes on auth state
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      console.log('Auth state changed:', session);
       setUser(session?.user ?? null);
       if (session?.user) {
+        // Fetch roles from database
         fetchUserRoles(session.user.id);
       }
     });
 
-    return () => subscription.unsubscribe();
-  }, [setUser, fetchUserRoles]);
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, [setUser, setUserRoles, fetchUserRoles]);
 
   return (
-    <AuthContext.Provider value={{ user, loading }}>
-      {!loading && children}
+    <AuthContext.Provider value={{ user, userRoles, loading }}>
+      {children}
     </AuthContext.Provider>
   );
 };

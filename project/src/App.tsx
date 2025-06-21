@@ -26,6 +26,7 @@ import OwnerDashboard from './components/dashboard/OwnerDashboard';
 import RenterDashboard from './components/dashboard/RenterDashboard';
 import Profile from './components/Profile';
 import ScrollToTop from './components/generic/ScrollToTop';
+import TermsAndConditions from './pages/TermsAndConditions';
 
 function App() {
   const { setUser, fetchUserRoles } = useAuthStore();
@@ -96,6 +97,11 @@ function App() {
              <>
              <Navbar />
              <EquipmentDetails />
+             <Footer />  
+             </>} />
+          <Route path="/terms" element={
+             <>
+             <TermsAndConditions />
              <Footer />  
              </>} />
           <Route path="/all-equipment" element={

@@ -31,6 +31,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         .eq('user_id', userId);
 
       if (error) throw error;
+      console.log('user roles:', roles);
       set({ userRoles: roles?.map(r => r.role) || [] });
     } catch (error) {
       console.error('Error fetching user roles:', error);

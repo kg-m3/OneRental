@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Mail, Lock, Loader, UserCircle, Building } from 'lucide-react';
+import { useNavigate, Link } from 'react-router-dom';
+import { Mail, Lock, Loader, UserCircle, Building, Check } from 'lucide-react';
 import { useAuthStore } from '../store/authStore';
 
 const Auth = () => {
@@ -10,6 +10,7 @@ const Auth = () => {
   const [name, setName] = useState('');
   const [companyName, setCompanyName] = useState('');
   const [selectedRoles, setSelectedRoles] = useState<string[]>([]);
+  const [acceptTerms, setAcceptTerms] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   
@@ -28,6 +29,9 @@ const Auth = () => {
       } else {
         if (selectedRoles.length === 0) {
           throw new Error('Please select at least one role');
+        }
+        if (!acceptTerms) {
+          throw new Error('Please accept the Terms and Conditions to proceed');
         }
         await signUp(email, password, name, companyName, selectedRoles);
         navigate('/dashboard');
@@ -174,6 +178,25 @@ const Auth = () => {
                       <p className="text-sm text-gray-500">List and manage equipment</p>
                     </button>
                   </div>
+                </div>
+
+                <div className="flex items-center">
+                  <input
+                    type="checkbox"
+                    checked={acceptTerms}
+                    onChange={(e) => setAcceptTerms(e.target.checked)}
+                    className="h-4 w-4 text-blue-900 focus:ring-blue-500 border-gray-300 rounded"
+                  />
+                  <label className="ml-2 text-sm text-gray-600">
+                    I have read and agree to the{' '}
+                    <Link 
+                      to="/terms" 
+                      className="text-blue-900 hover:text-blue-800"
+                      state={{ from: '/auth' }}
+                    >
+                      Terms and Conditions
+                    </Link>
+                  </label>
                 </div>
               </div>
             )}

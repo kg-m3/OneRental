@@ -190,9 +190,28 @@ const RenterDashboard = () => {
               <div className="flex space-x-2">
                 <button
                   className="px-3 py-3 border-2 border-yellow-600 text-yellow-600 rounded-lg font-semibold transition-all duration-300 hover:bg-yellow-600 hover:text-white"
-                  onClick={() => {
-                    // Handle cancel booking
-                    alert('Cancel booking functionality coming soon!');
+                  onClick={async () => {
+                    try {
+                      console.log(booking.id);
+                      const { error } = await supabase
+                        .from('bookings')
+                        .delete()
+                        .eq('id', booking.id);
+
+                      if (error) throw error;
+
+                      // Update local state
+                      setBookings(prev => prev.filter(b => b.id !== booking.id));
+                      
+                      // Close modal
+                      onClose();
+                      
+                      // Show success message
+                      alert('Booking cancelled successfully');
+                    } catch (error) {
+                      console.error('Error cancelling booking:', error);
+                      alert('Failed to cancel booking. Please try again.');
+                    }
                   }}
                 >
                   Cancel Booking
