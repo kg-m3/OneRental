@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { supabase } from '../lib/supabase';
-import { Upload, MapPin, DollarSign, PenTool as Tool, Info, ArrowLeft } from 'lucide-react';
+import { Upload, MapPin, DollarSign, XCircle, PenTool as Tool, Info, ArrowLeft } from 'lucide-react';
 import { useAuth } from '../context/authContext';
 import { Navigate, useNavigate } from 'react-router-dom';
 
@@ -20,9 +20,14 @@ const ListEquipment = () => {
     location: '',
     rate: '',
     // features: [''],
-    images: [] as string[],
-    status: 'Available'
+    images: [] as File[],
+    status: 'available'
   });
+  const [uploadedImages, setUploadedImages] = useState<{
+    image_url: string;
+    file_name: string;
+    is_main: boolean;
+  }[]>([]);
 
   const equipmentTypes = [
     'Excavator',
@@ -52,17 +57,49 @@ const ListEquipment = () => {
   //   setFormData({ ...formData, features: newFeatures });
   // };
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
-    if (files) {
-      const newImages = Array.from(files).map(file => URL.createObjectURL(file));
-      setFormData({ ...formData, images: [...formData.images, ...newImages] });
+    if (!files || files.length === 0) return;
+    
+    for (const file of files) {
+      const fileExtension = file.name.split('.').pop()?.toLowerCase();
+      const allowedExtensions = ['jpg', 'jpeg', 'png', 'webp'];
+
+      if (!allowedExtensions.includes(fileExtension!)) return;
+
+      const fileName = `${Date.now()}-${file.name}`;
+      const filePath = `public/temp/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('equipment-images')
+        .upload(filePath, file, {
+          cacheControl: '3600',
+          upsert: false});
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('equipment-images')
+        .getPublicUrl(filePath);
+
+     setUploadedImages(prev => [...prev, {
+       image_url: publicUrl,
+       file_name: fileName,
+       is_main: prev.length === 0 //make 1st one main image
+     }]);
     }
+    e.target.value = '';
+  };
+  
+  const removeImage = (image_url: string) => {
+    setUploadedImages(prev => prev.filter(img => img.image_url !== image_url));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+    console.log("LIST COMPONENT --- FORM DATA ---" + JSON.stringify(formData));
+    console.log("LIST COMPONENT --- FORM DATA IMAGES ---" + JSON.stringify(formData.images));
+
     try {
       const { data, error } = await supabase
         .from('equipment')
@@ -78,25 +115,20 @@ const ListEquipment = () => {
         }).select();
 
       if (error) throw error;
-      console.log(data);
-      
-      // Upload additional images if any
-      if (formData.images.length > 0 ) {
-        const additionalImages = formData.images.slice(1);
-        for (const image of formData.images) {
-          const imagesResult = await supabase  
-            .from('equipment_images')
-            .insert({
-              equipment_id: data?.[0].id,
-              image_url: image,
-              is_main: image === formData.images[0]
-            });
+      console.log("LIST COMPONENT --- INSERT EQUIPMENT ---" + data);
+      const equipmentId = data?.[0].id;
 
-            if (imagesResult.error) {
-              throw new Error('Failed to upload image');
-            }
-        }
-      }
+      const { error: imageSaveError } = await supabase
+        .from('equipment_images')
+        .upsert(
+          uploadedImages.map(img => ({
+            equipment_id: equipmentId,
+            image_url: img.image_url,
+            is_main: img.is_main
+          }))
+        );
+
+      if (imageSaveError) throw imageSaveError;
 
       alert('Equipment listing submitted successfully!');
       setFormData({
@@ -107,8 +139,9 @@ const ListEquipment = () => {
         rate: '',
         // features: [''],
         images: [],
-        status: 'Available'
+        status: 'available'
       });
+      setUploadedImages([]);
     } catch (err) {
       console.error('Error submitting equipment:', err);
       alert('Failed to submit equipment listing. Please try again.');
@@ -287,28 +320,25 @@ const ListEquipment = () => {
                   </p>
                 </div>
 
-                {formData.images.length > 0 && (
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                    {formData.images.map((image, index) => (
-                      <div key={index} className="relative">
-                        <img
-                          src={image}
-                          alt={`Preview ${index + 1}`}
-                          className="w-full h-32 object-cover rounded-lg"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => setFormData({
-                            ...formData,
-                            images: formData.images.filter((_, i) => i !== index)
-                          })}
-                          className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
-                        >
-                          ×
-                        </button>
-                      </div>
-                    ))}
-                  </div>
+                {uploadedImages.length > 0 && (
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                  {uploadedImages.map((image, index) => (
+                    <div key={index} className="relative bg-gray-100 rounded-lg overflow-hidden aspect-square">
+                      <img
+                        src={image.image_url}
+                        alt={`Preview ${index + 1}`}
+                        className="w-full h-full object-contain"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => removeImage(image.image_url)}
+                        className="absolute top-1 right-1 bg-white rounded-full p-1 shadow hover:bg-gray-100"
+                      >
+                        <XCircle className="h-4 w-4 text-red-500" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
                 )}
               </div>
             </div>

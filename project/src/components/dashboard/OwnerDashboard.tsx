@@ -130,9 +130,9 @@ const OwnerDashboard = () => {
     try {
       // Check if file is an image and has allowed extension
       const allowedExtensions = ['jpg', 'jpeg', 'png', 'webp'];
-      const fileExtension = file.name.split('.').pop()?.toLowerCase();
+      const fileExtension = file.name.split('.').pop()?.toLowerCase() || '';
       
-      if (!allowedExtensions.includes(fileExtension)) {
+      if (!fileExtension || !allowedExtensions.includes(fileExtension)) {
         alert('Only JPG, JPEG, PNG, and WEBP files are allowed.');
         return;
       }
@@ -180,6 +180,14 @@ const OwnerDashboard = () => {
       alert('Failed to upload image. Please try again.');
     }
   };
+
+  const removeImage = (image_url: string) => {
+    setEditFormData(prev => ({
+      ...prev,
+      equipment_images: prev.equipment_images.filter(img => img.image_url !== image_url)
+    }));
+  };
+  
   const [stats, setStats] = useState({
     totalEquipment: 0,
     activeBookings: 0,
@@ -250,7 +258,7 @@ const OwnerDashboard = () => {
 
         const { error: imagesError } = await supabase
           .from('equipment_images')
-          .upsert(imagesToUpdate);
+          .upsert(imagesToUpdate,{onConflict:'id'});
 
         if (imagesError) throw imagesError;
       }
@@ -306,12 +314,33 @@ const OwnerDashboard = () => {
 
   const handleDeleteConfirm = async () => {
     try {
-      const { error } = await supabase
+      // 1. Get all images related to this equipment
+      const { data: images, error: imagesError } = await supabase
+        .from('equipment_images')
+        .select('image_url')
+        .eq('equipment_id', selectedEquipmentId);
+
+      if (imagesError) throw imagesError;
+
+      // 2. Delete all images from storage
+      if (images) {
+        for (const image of images) {
+          const path = image.image_url.split('/').slice(4).join('/'); // Extract path from URL
+          const { error: deleteError } = await supabase.storage
+            .from('equipment-images')
+            .remove([path]);
+          
+          if (deleteError) console.error('Error deleting image:', deleteError);
+        }
+      }
+
+      // 3. Delete equipment
+      const { error: deleteEquipmentError } = await supabase
         .from('equipment')
         .delete()
         .eq('id', selectedEquipmentId);
 
-      if (error) throw error;
+      if (deleteEquipmentError) throw deleteEquipmentError;
 
       // Update local state
       setEquipment((prev) => prev.filter((e) => e.id !== selectedEquipmentId));
@@ -323,7 +352,7 @@ const OwnerDashboard = () => {
 
       setDeleteConfirmOpen(false);
       setSelectedEquipmentId('');
-      alert('Equipment deleted successfully!');
+      alert('Equipment and all related images deleted successfully!');
     } catch (error) {
       console.error('Error deleting equipment:', error);
       alert('Failed to delete equipment. Please try again.');

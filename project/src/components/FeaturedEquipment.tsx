@@ -79,6 +79,7 @@ const FeaturedEquipment = () => {
       if (equipmentError) throw equipmentError;
       
       if (equipmentData) {
+        console.log(equipmentData);
         const equipmentWithImages = await Promise.all(
           equipmentData.map(async (item) => {
             const { data: images, error: imagesError } = await supabase

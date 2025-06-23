@@ -73,6 +73,11 @@ const EquipmentDetails = () => {
   const [images, setImages] = useState<string[]>([]);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
+  useEffect(() => {
+    // Reset current index when images change
+    setCurrentImageIndex(0);
+  }, [images]);
+
   // Get images from equipment object
   const imagesToShow = equipment?.images?.map(img => img.image_url) || [];
 
@@ -171,80 +176,6 @@ const EquipmentDetails = () => {
         
         const { data: equipment, error: equipmentError } = await supabase
           .from('equipment')
-          .select('*,user_profiles!inner (id, company_name, full_name, email), equipment_images(*)')
-          .eq('id', id)
-          .single();
-
-        if (equipmentError) throw equipmentError;
-
-        // Equipment already includes images from the join query
-        setEquipment(equipment);
-        
-        // Update images state with the images from the equipment object
-        const images = equipment?.images?.map(img => img.image_url) || [];
-        setImages(images);
-
-        if (equipment?.rate && duration > 0) {
-          setTotalAmount(equipment.rate * duration);
-        }
-      } catch (err) {
-        setError('Failed to fetch equipment details');
-        console.error(err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    checkAuth();
-    fetchEquipmentDetails();
-  }, [id, duration, equipment?.rate]);
-
-  const calculateDuration = (start: string, end: string) => {
-    const startDate = new Date(start);
-    const endDate = new Date(end);
-    const diffTime = Math.abs(endDate.getTime() - startDate.getTime());
-    return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-  };
-
-  useEffect(() => {
-     // Get current user
-   const checkAuth = async () => {
-    try {
-      setAuthState('checking');
-      const { data: { user }, error: authError } = await supabase.auth.getUser();
-      if (authError) {
-        if (authError instanceof Error && authError.name === 'AuthSessionMissingError') {
-          console.log('No active session found');
-          setAuthState('unauthenticated');
-          return;
-        }
-        throw authError;
-      }
-
-      if (!user) {
-        console.log('User not authenticated');
-        setAuthState('unauthenticated');
-      } else {
-        console.log('User authenticated');
-        console.log(user);
-        setUser(user);
-        setAuthState('authenticated');
-      }
-    } catch (error) {
-      console.error('Error checking auth:', error);
-      setAuthState('unauthenticated');
-    } finally {
-      // Add finally block to ensure proper cleanup
-    }
-  };
-
-    const fetchEquipmentDetails = async () => {
-      try {
-        setLoading(true);
-        setError('');
-        
-        const { data: equipment, error: equipmentError } = await supabase
-          .from('equipment')
           .select('*,user_profiles!inner (id, company_name, full_name, email)')
           .eq('id', id)
           .single();
@@ -282,24 +213,30 @@ const EquipmentDetails = () => {
     }
   }, [id, duration, equipment?.rate]);
 
+  const calculateDuration = (start: string, end: string) => {
+    const startDate = new Date(start);
+    const endDate = new Date(end);
+    const diffTime = Math.abs(endDate.getTime() - startDate.getTime());
+    return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  };
 
   const handleDateChange = (field: 'startDate' | 'endDate', value: string) => {
-        const newBookingData = { ...bookingData, [field]: value };
-        setBookingData(newBookingData);
+    const newBookingData = { ...bookingData, [field]: value };
+    setBookingData(newBookingData);
     
-        if (newBookingData.startDate && newBookingData.endDate) {
-          const days = calculateDuration(
-            newBookingData.startDate,
-            newBookingData.endDate
-          );
-          setDuration(days);
-          if (equipment) {
-            setTotalAmount(days * equipment.rate);
-          } else {
-            setTotalAmount(0);
-          }
-        }
-      };
+    if (newBookingData.startDate && newBookingData.endDate) {
+      const days = calculateDuration(
+        newBookingData.startDate,
+        newBookingData.endDate
+      );
+      setDuration(days);
+      if (equipment) {
+        setTotalAmount(days * equipment.rate);
+      } else {
+        setTotalAmount(0);
+      }
+    }
+  };
 
   const handleBookingSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -385,36 +322,43 @@ const EquipmentDetails = () => {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Image Slider */}
           <div className="relative mb-2">
-            <div className="w-full aspect-video rounded-lg overflow-hidden relative">
-              <Slider key={imagesToShow.length} {...sliderSettings} className="w-full">
-                {imagesToShow.map((url, index) => (
-                  <div key={index} className="w-full h-full aspect-video">
-                    <img
-                      src={url}
-                      alt={`${equipment?.title} ${index + 1}`}
-                      className="w-full h-full object-cover"
-                      style={{
-                        objectFit: 'cover',
-                        objectPosition: 'center'
-                      }}
-                    />
-                  </div>
-                ))}
-              </Slider>
-            </div>
+            {loading ? (
+              <div className="w-full aspect-video rounded-lg overflow-hidden flex items-center justify-center">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-900"></div>
+              </div>
+            ) : imagesToShow.length > 0 ? (
+              <div className="w-full aspect-video rounded-lg overflow-hidden relative bg-gray-100">
+                <Slider key={imagesToShow.length} {...sliderSettings} className="w-full h-full">
+                  {imagesToShow.map((url, index) => (
+                    <div key={index} className="w-full h-full aspect-video flex items-center justify-center">
+                      <img
+                        src={url}
+                        alt={`${equipment?.title} ${index + 1}`}
+                        loading='lazy'
+                        className="w-full h-full object-contain"
+                      />
+                    </div>
+                  ))}
+                </Slider>
+              </div>
+            ) : (
+              <div className="w-full aspect-video rounded-lg overflow-hidden flex items-center justify-center bg-gray-100">
+                <p className="text-gray-500">No images available</p>
+              </div>
+            )}
           </div>
-
-            {/* <div className="bg-white p-6 rounded-lg shadow-lg">
-              <h3 className="text-xl font-bold mb-4">Features & Specifications</h3>
-              <ul className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {equipment.features.map((feature, index) => (
-                  <li key={index} className="flex items-center">
-                    <Tool className="h-5 w-5 text-yellow-600 mr-2" />
-                    <span>{feature}</span>
-                  </li>
-                ))}
-              </ul>
-            </div> */}
+          {/* Features & Specifications (commented out) */}
+          {/* <div className="bg-white p-6 rounded-lg shadow-lg">
+            <h3 className="text-xl font-bold mb-4">Features & Specifications</h3>
+            <ul className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {equipment.features?.map((feature, index) => (
+                <li key={index} className="flex items-center">
+                  <Tool className="h-5 w-5 text-yellow-600 mr-2" />
+                  <span>{feature}</span>
+                </li>
+              ))}
+            </ul>
+          </div> */}
           
 
           {/* Right Column - Details */}
@@ -618,18 +562,18 @@ const EquipmentDetails = () => {
                 </div>
               )}
 
-            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 sticky bottom-0">
-              <div className="flex items-start">
-                <AlertTriangle className="h-5 w-5 text-yellow-500 mt-0.5 mr-2" />
-                <div>
-                  <h4 className="text-yellow-800 font-medium">Important Note</h4>
-                  <p className="text-yellow-600 text-sm mt-1">
-                    This is a booking request. The equipment owner will review and
-                    confirm your booking.
-                  </p>
+              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 sticky bottom-0">
+                <div className="flex items-start">
+                  <AlertTriangle className="h-5 w-5 text-yellow-500 mt-0.5 mr-2" />
+                  <div>
+                    <h4 className="text-yellow-800 font-medium">Important Note</h4>
+                    <p className="text-yellow-600 text-sm mt-1">
+                      This is a booking request. The equipment owner will review and
+                      confirm your booking.
+                    </p>
+                  </div>
                 </div>
               </div>
-            </div>
 
               <div className="flex justify-end pt-4 px-6">
                 <button

@@ -8,6 +8,8 @@ import {
 import { useAuthStore } from './store/authStore';
 import { supabase } from './lib/supabase';
 import { AuthProvider } from './context/authContext';
+import { ProtectedRoute } from './components/ProtectedRoute';
+
 
 import Navbar from './components/Navbar';
 import Hero from './components/Hero';
@@ -118,14 +120,16 @@ function App() {
              <ListEquipment  />
              <Footer />  
              </>} />
-          <Route path="/dashboard" element={ 
+          <Route path="/dashboard" element={
+            <ProtectedRoute>
             <>
             <Navbar />
             <Dashboard />
             <Footer />  
-            </>} />
-          <Route path="/owner-dashboard" element={<OwnerDashboard />} />
-          <Route path="/renter-dashboard" element={<RenterDashboard />} />
+            </>
+            </ProtectedRoute>} />
+          <Route path="/owner-dashboard" element={<ProtectedRoute><OwnerDashboard /></ProtectedRoute>} />
+          <Route path="/renter-dashboard" element={<ProtectedRoute><RenterDashboard /></ProtectedRoute>} />
           <Route path="/profile" element={
              <>
             <Navbar />
