@@ -84,97 +84,102 @@ const AllEquipment = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 pt-20">
-      <div className="container mx-auto px-4 py-8">
-        <button onClick={() => navigate(-1)} className="inline-flex items-center text-gray-600 hover:text-blue-900 mb-6">
-          <ArrowLeft className="h-5 w-5 mr-2" />
-          Back
-        </button>
-        <div className="flex flex-col md:flex-row justify-between items-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-800 mb-4 md:mb-0">
-            Available Equipment
-          </h1>
+      {loading ? (
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-900"></div>
+        </div>
+      ) : (
+        <div className="container mx-auto px-4 py-8">
+          <button onClick={() => navigate(-1)} className="inline-flex items-center text-gray-600 hover:text-blue-900 mb-6">
+            <ArrowLeft className="h-5 w-5 mr-2" />
+            Back
+          </button>
+          <div className="flex flex-col md:flex-row justify-between items-center mb-8">
+            <h1 className="text-3xl font-bold text-gray-800 mb-4 md:mb-0">
+              Available Equipment
+            </h1>
 
-          <div className="flex flex-col sm:flex-row gap-4 w-full md:w-auto">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
-              <input
-                type="text"
-                placeholder="Search equipment..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-900 w-full sm:w-64"
-              />
-            </div>
+            <div className="flex flex-col sm:flex-row gap-4 w-full md:w-auto">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+                <input
+                  type="text"
+                  placeholder="Search equipment..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-900 w-full sm:w-64"
+                />
+              </div>
 
-            <div className="relative">
-              <Filter className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
-              <select
-                value={selectedType}
-                onChange={(e) => setSelectedType(e.target.value)}
-                className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-900 appearance-none bg-white w-full sm:w-48"
-              >
-                {types.map((type) => (
-                  <option key={type} value={type}>
-                    {type}
-                  </option>
-                ))}
-              </select>
+              <div className="relative">
+                <Filter className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+                <select
+                  value={selectedType}
+                  onChange={(e) => setSelectedType(e.target.value)}
+                  className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-900 appearance-none bg-white w-full sm:w-48"
+                >
+                  {types.map((type) => (
+                    <option key={type} value={type}>
+                      {type}
+                    </option>
+                  ))}
+                </select>
+              </div>
             </div>
           </div>
-        </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {filteredEquipment.map((item) => (
-            <div
-              key={item.id}
-              className="bg-white rounded-lg overflow-hidden shadow-lg transition-all duration-300 hover:shadow-xl transform hover:-translate-y-2"
-            >
-              <div className="relative">
-                <img
-                  src={item.images?.find(img => img.is_main)?.image_url || ''}
-                  alt={item.title}
-                  className="w-full h-60 object-cover"
-                />
-                <div 
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {filteredEquipment.map((item) => (
+              <div
+                key={item.id}
+                className="bg-white rounded-lg overflow-hidden shadow-lg transition-all duration-300 hover:shadow-xl transform hover:-translate-y-2"
+              >
+                <div className="relative">
+                  <img
+                    src={item.images?.find(img => img.is_main)?.image_url || ''}
+                    alt={item.title}
+                    className="w-full h-60 object-cover"
+                  />
+                  <div 
                     className={`absolute top-4 right-4 px-3 py-1 rounded-full text-sm font-medium ${
                       item.status === 'available' ? 'bg-green-100 text-green-800' :
                       item.status === 'inactive' ? 'bg-yellow-100 text-yellow-800' :
                     'bg-gray-100 text-gray-800'
                   }`}>
-                  {item.status}
+                    {item.status}
+                  </div>
+                </div>
+
+                <div className="p-6">
+                  <div className="flex justify-between items-center mb-3">
+                    <h3 className="text-xl font-bold text-gray-800">
+                      {item.title}
+                    </h3>
+                    <span className="text-green-600 font-semibold">
+                      R{item.rate}/day
+                    </span>
+                  </div>
+
+                  <p className="text-gray-600 mb-4">{item.description}</p>
+
+                  <div className="flex items-center text-sm text-gray-500 mb-6">
+                    <MapPin className="h-4 w-4 mr-1" />
+                    <span>{item.location}</span>
+                  </div>
+
+                  <Link
+                    to={`/equipment/${item.id}`}
+                    className="block w-full text-center py-3 bg-blue-900 text-white rounded-lg font-medium transition-colors duration-300 hover:bg-blue-800"
+                  >
+                    View Details
+                  </Link>
                 </div>
               </div>
-
-              <div className="p-6">
-                <div className="flex justify-between items-center mb-3">
-                  <h3 className="text-xl font-bold text-gray-800">
-                    {item.title}
-                  </h3>
-                  <span className="text-green-600 font-semibold">
-                    R{item.rate}/day
-                  </span>
-                </div>
-
-                <p className="text-gray-600 mb-4">{item.description}</p>
-
-                <div className="flex items-center text-sm text-gray-500 mb-6">
-                  <MapPin className="h-4 w-4 mr-1" />
-                  <span>{item.location}</span>
-                </div>
-
-                <Link
-                  to={`/equipment/${item.id}`}
-                  className="block w-full text-center py-3 bg-blue-900 text-white rounded-lg font-medium transition-colors duration-300 hover:bg-blue-800"
-                >
-                  View Details
-                </Link>
-              </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 };
-
 export default AllEquipment;

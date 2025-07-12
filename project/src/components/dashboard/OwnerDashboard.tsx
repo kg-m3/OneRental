@@ -5,6 +5,7 @@ import { supabase } from '../../lib/supabase';
 import { format, parseISO, isWithinInterval } from 'date-fns';
 import DatePicker from 'react-datepicker';
 import { useAuth } from '../../context/authContext';
+import EquipmentEditor from './EquipmentEditor';
 import 'react-datepicker/dist/react-datepicker.css';
 
 interface Equipment {
@@ -97,89 +98,112 @@ const OwnerDashboard = () => {
     owner_id: ''
   });
 
-  const handleImageDelete = async (imageId: string) => {
-    try {
-      // Get the image path from the existing images
-      const image = editFormData.equipment_images.find(img => img.id === imageId);
-      if (!image) throw new Error('Image not found');
 
-      // Delete from storage
-      const { error: storageError } = await supabase.storage
-        .from('equipment-images')
-        .remove([`equipment/${selectedEquipment?.id}/${imageId}`]);
-
-      if (storageError) throw storageError;
-
-      // Update form data
-      setEditFormData(prev => ({
-        ...prev,
-        equipment_images: prev.equipment_images.filter(img => img.id !== imageId)
-      }));
-
-      alert('Image deleted successfully!');
-    } catch (error) {
-      console.error('Error deleting image:', error);
-      alert('Failed to delete image. Please try again.');
-    }
+  const handleSave = (updatedEquipment: Equipment) => {
+    // Update local state, refetch, etc.
+    console.log('Updated:', updatedEquipment);
   };
+
+ const handleImageDelete = async (imageUrl: string) => {
+  try {
+    console.log("IMAGE URL --- " + imageUrl);
+    const image = editFormData.equipment_images.find(img => img.image_url === imageUrl);
+    if (!image) throw new Error('Image not found');
+
+    // 1. Extract path from public URL
+    const filePath = image.image_url.split('/equipment-images/')[1];
+    if (!filePath) throw new Error('Invalid image URL format');
+    console.log("FILE PATH --- " + filePath);
+    // 2. Delete from Supabase Storage
+    const { data, error: storageError } = await supabase.storage
+      .from('equipment-images')
+      .remove([filePath]);
+
+    if (storageError) throw storageError;
+    console.log("DATA --- " + data);
+    // 3. Delete from Supabase DB using image_url (not id)
+    const { error: dbError } = await supabase
+      .from('equipment_images')
+      .delete()
+      .eq('image_url', image.image_url);
+
+    if (dbError) throw dbError;
+
+    // 4. Update local form state
+    setEditFormData(prev => ({
+      ...prev,
+      equipment_images: prev.equipment_images.filter(img => img.image_url !== image.image_url),
+    }));
+
+    alert('Image deleted successfully!');
+  } catch (error) {
+    console.error('Error deleting image:', error);
+    alert('Failed to delete image. Please try again.');
+  }
+};
+
+  
 
   const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-    if (!file) return;
-
+    if (!file || !selectedEquipment) {
+      alert('Please select a file and ensure equipment is selected.');
+      return;
+    }
+  
     try {
-      // Check if file is an image and has allowed extension
       const allowedExtensions = ['jpg', 'jpeg', 'png', 'webp'];
-      const fileExtension = file.name.split('.').pop()?.toLowerCase() || '';
-      
+      const fileExtension = file.name.split('.').pop()?.toLowerCase();
       if (!fileExtension || !allowedExtensions.includes(fileExtension)) {
         alert('Only JPG, JPEG, PNG, and WEBP files are allowed.');
         return;
       }
-
-      // Generate a unique filename with timestamp
+  
       const fileName = `${Date.now()}-${file.name}`;
-      // Check if selectedEquipment exists
-      if (!selectedEquipment) {
-        alert('Please select an equipment first.');
-        return;
-      }
-
-      // Use simple path: public/equipment_id/filename
       const filePath = `public/${selectedEquipment.id}/${fileName}`;
-
-      // Upload to storage
+  
       const { error: uploadError } = await supabase.storage
         .from('equipment-images')
         .upload(filePath, file, {
           cacheControl: '3600',
-          upsert: false
+          upsert: false,
         });
-
+  
       if (uploadError) throw uploadError;
-
-      // Get public URL
+  
       const { data: { publicUrl } } = supabase.storage
         .from('equipment-images')
         .getPublicUrl(filePath);
-
-      // Update form data
-      setEditFormData(prev => ({
-        ...prev,
-        equipment_images: [...prev.equipment_images, {
-          id: fileName,
-          image_url: publicUrl,
-          is_main: false,
-          equipment_id: selectedEquipment?.id || ''
-        }]
-      }));
-
+  
+      // Prevent duplicates
+      setEditFormData(prev => {
+        if (prev.equipment_images.some(img => img.image_url === publicUrl)) {
+          alert('This image is already uploaded.');
+          return prev;
+        }
+  
+        return {
+          ...prev,
+          equipment_images: [
+            ...prev.equipment_images,
+            {
+              id: fileName,
+              image_url: publicUrl,
+              is_main: prev.equipment_images.length === 0, // First image is main
+              equipment_id: selectedEquipment.id
+            }
+          ]
+        };
+      });
+  
       alert('Image uploaded successfully!');
+      event.target.value = '';
     } catch (error) {
       console.error('Error uploading image:', error);
       alert('Failed to upload image. Please try again.');
     }
   };
+  
 
   const removeImage = (image_url: string) => {
     setEditFormData(prev => ({
@@ -378,7 +402,7 @@ const OwnerDashboard = () => {
       .from('equipment')
       .select(`
         *,
-        equipment_images!inner (image_url, is_main)
+        equipment_images!inner (id, image_url, is_main)
       `)
       .eq('owner_id', user.id)
       .order('created_at', { ascending: false });
@@ -399,6 +423,7 @@ const OwnerDashboard = () => {
           throw new Error('User not found');
         }
 
+       
         const equipmentData = equipmentResult.data || [];
         const bookingsData = bookingsResult.data || [];
         console.log(equipmentData);
@@ -1009,7 +1034,7 @@ const OwnerDashboard = () => {
       </div>
 
       {/* Equipment Edit Modal */}
-      {isEditModalOpen && (
+      {false && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
            <div className="bg-white w-full max-w-md rounded-lg shadow-xl p-6 relative max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-center mb-6">
@@ -1107,14 +1132,16 @@ const OwnerDashboard = () => {
                     {/* Existing Images */}
                     <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
                       {Array.isArray(editFormData.equipment_images) && editFormData.equipment_images.length > 0 && editFormData.equipment_images.map((image) => (
+                        
                         <div key={image.id} className="relative">
+                          
                           <img
                             src={image.image_url}
                             alt="Equipment"
                             className="w-full h-32 object-cover rounded-lg"
-                          />
-                          <button
-                            onClick={() => handleImageDelete(image.id)}
+                          /> 
+                          <button type='button'
+                            onClick={() => handleImageDelete(image.image_url)}
                             className="absolute -top-2 -right-2 bg-white rounded-full p-1 shadow-lg hover:bg-gray-100"
                           >
                             <XCircle className="h-4 w-4 text-red-500" />
@@ -1204,6 +1231,13 @@ const OwnerDashboard = () => {
             </div>
           </div>
         </div>
+      )}
+      {selectedEquipment && (
+        <EquipmentEditor
+          selectedEquipment={selectedEquipment}
+          onClose={() => setSelectedEquipment(null)}
+          onSave={handleSave}
+        />
       )}
 
       {/* Booking Details Modal */}

@@ -488,8 +488,8 @@ const EquipmentDetails = () => {
 
       {/* Booking Modal */}
       {showBookingModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex flex-col justify-center items-center p-4 z-50">
-          <div className="bg-white rounded-lg shadow-xl max-w-md w-full">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-center p-6 border-b">
               <h2 className="text-xl font-bold text-gray-800">Book Equipment</h2>
               <button
@@ -500,7 +500,7 @@ const EquipmentDetails = () => {
               </button>
             </div>
 
-            <form onSubmit={handleBookingSubmit} className="p-6 space-y-4">
+            <form onSubmit={handleBookingSubmit} className="p-6 space-y-4 min-h-[300px] max-h-[calc(90vh-120px)] overflow-y-auto">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Start Date
@@ -562,7 +562,21 @@ const EquipmentDetails = () => {
                 </div>
               )}
 
-              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 sticky bottom-0">
+              <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg mb-6">
+                <div className="flex items-center">
+                  <HandCoins className="h-6 w-6 text-blue-900 mr-2" />
+                  <div>
+                    <p className="text-2xl font-bold text-gray-800">R{equipment?.rate}</p>
+                    <p className="text-sm text-gray-500">per day</p>
+                  </div>
+                </div>
+                <div className="flex items-center">
+                  <AlertTriangle className="h-4 w-4 text-gray-500 mr-1" />
+                  <span className="text-sm text-gray-500">Minimum booking: 1 month</span>
+                </div>
+              </div>
+
+              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 bottom-0">
                 <div className="flex items-start">
                   <AlertTriangle className="h-5 w-5 text-yellow-500 mt-0.5 mr-2" />
                   <div>

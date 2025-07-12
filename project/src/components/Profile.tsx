@@ -328,56 +328,6 @@ const Profile = () => {
                 </div>
               </form>
 
-              {/* Terms and Conditions Section */}
-              <div className="mt-8">
-                <h2 className="text-xl font-semibold mb-4">Terms and Conditions</h2>
-                <div className="bg-gray-50 p-6 rounded-lg">
-                  <div className="mb-4">
-                    <p className="text-gray-600">
-                      By accepting these terms and conditions, you agree to:
-                    </p>
-                    <ul className="list-disc list-inside mt-2 space-y-2 text-gray-600">
-                      <li>Comply with all rental agreements and policies</li>
-                      <li>Use equipment only for intended purposes</li>
-                      <li>Return equipment in good condition</li>
-                      <li>Follow all safety guidelines</li>
-                      <li>Report any issues promptly</li>
-                    </ul>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <input
-                      type="checkbox"
-                      id="terms"
-                      checked={termsAccepted}
-                      onChange={() => setTermsAccepted(!termsAccepted)}
-                      className="w-4 h-4 text-blue-900 focus:ring-blue-500"
-                      disabled={loading}
-                    />
-                    <label htmlFor="terms" className="text-sm text-gray-700">
-                      I have read and agree to the terms and conditions
-                    </label>
-                  </div>
-                  {!termsAccepted ? (
-                    <button
-                      onClick={handleAcceptTerms}
-                      disabled={loading}
-                      className="mt-4 px-4 py-2 bg-blue-900 text-white rounded-lg hover:bg-blue-800 disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      {loading ? (
-                        <>
-                          <Loader className="h-5 w-5 animate-spin mr-2" />
-                          Accepting...
-                        </>
-                      ) : (
-                        'Accept Terms'
-                      )}
-                    </button>
-                  ) : (
-                    <p className="mt-4 text-green-600">Terms and conditions accepted</p>
-                  )}
-                </div>
-              </div>
-
               {/* Verification Section */}
               <div className="mt-8 pt-8 border-t">
                 <div className="flex items-center justify-between">
