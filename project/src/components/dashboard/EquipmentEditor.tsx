@@ -3,13 +3,6 @@ import { XCircle, Plus, Trash2, AlertTriangle } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { v4 as uuidv4 } from 'uuid';
 
-type Image = {
-  id?: string;
-  image_url: string;
-  is_main: boolean;
-  equipment_id: string;
-};
-
 type Equipment = {
   id: string;
   title: string;
@@ -18,8 +11,15 @@ type Equipment = {
   location: string;
   rate: number;
   status: string;
+  created_at: string;
+  updated_at: string;
   owner_id: string;
-  equipment_images: Image[];
+  equipment_images: {
+    id?: string;
+    image_url: string;
+    is_main: boolean;
+    equipment_id: string;
+  }[];
 };
 
 type Props = {
@@ -152,7 +152,7 @@ const EquipmentEditor: React.FC<Props> = ({ selectedEquipment, onClose, onSave }
       if (upserts.length > 0) {
         await supabase.from('equipment_images').upsert(upserts, { onConflict: 'id' });
       }
-
+      console.log("Handle submit --- Edit Form Data ---> " + JSON.stringify(editFormData));
       onSave({ ...editFormData });
       onClose();
     } catch (err) {

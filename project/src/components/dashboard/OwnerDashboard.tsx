@@ -19,7 +19,7 @@ interface Equipment {
   created_at: string;
   updated_at: string;
   equipment_images: {
-    id: string;
+    id?: string;
     image_url: string;
     is_main: boolean;
     equipment_id: string;
@@ -82,6 +82,17 @@ const OwnerDashboard = () => {
   const [selectedEquipmentId, setSelectedEquipmentId] = useState('');
   const [selectedEquipment, setSelectedEquipment] = useState<Equipment | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [stats, setStats] = useState({
+    totalEquipment: 0,
+    activeBookings: 0,
+    totalBookings: 0,
+  });
+  const [isFilterMenuOpen, setIsFilterMenuOpen] = useState(false);
+  const [startDate, setStartDate] = useState<Date | null>(null);
+  const [endDate, setEndDate] = useState<Date | null>(null);
+  const [selectedStatus, setSelectedStatus] = useState<string>('all');
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [editFormData, setEditFormData] = useState({
     title: '',
     type: '',
@@ -90,308 +101,14 @@ const OwnerDashboard = () => {
     rate: 0,
     status: '',
     equipment_images: [] as {
-      id: string;
+      id?: string;
       image_url: string;
       is_main: boolean;
       equipment_id: string;
     }[],
     owner_id: ''
   });
-
-
-  const handleSave = (updatedEquipment: Equipment) => {
-    // Update local state, refetch, etc.
-    console.log('Updated:', updatedEquipment);
-  };
-
- const handleImageDelete = async (imageUrl: string) => {
-  try {
-    console.log("IMAGE URL --- " + imageUrl);
-    const image = editFormData.equipment_images.find(img => img.image_url === imageUrl);
-    if (!image) throw new Error('Image not found');
-
-    // 1. Extract path from public URL
-    const filePath = image.image_url.split('/equipment-images/')[1];
-    if (!filePath) throw new Error('Invalid image URL format');
-    console.log("FILE PATH --- " + filePath);
-    // 2. Delete from Supabase Storage
-    const { data, error: storageError } = await supabase.storage
-      .from('equipment-images')
-      .remove([filePath]);
-
-    if (storageError) throw storageError;
-    console.log("DATA --- " + data);
-    // 3. Delete from Supabase DB using image_url (not id)
-    const { error: dbError } = await supabase
-      .from('equipment_images')
-      .delete()
-      .eq('image_url', image.image_url);
-
-    if (dbError) throw dbError;
-
-    // 4. Update local form state
-    setEditFormData(prev => ({
-      ...prev,
-      equipment_images: prev.equipment_images.filter(img => img.image_url !== image.image_url),
-    }));
-
-    alert('Image deleted successfully!');
-  } catch (error) {
-    console.error('Error deleting image:', error);
-    alert('Failed to delete image. Please try again.');
-  }
-};
-
   
-
-  const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file || !selectedEquipment) {
-      alert('Please select a file and ensure equipment is selected.');
-      return;
-    }
-  
-    try {
-      const allowedExtensions = ['jpg', 'jpeg', 'png', 'webp'];
-      const fileExtension = file.name.split('.').pop()?.toLowerCase();
-      if (!fileExtension || !allowedExtensions.includes(fileExtension)) {
-        alert('Only JPG, JPEG, PNG, and WEBP files are allowed.');
-        return;
-      }
-  
-      const fileName = `${Date.now()}-${file.name}`;
-      const filePath = `public/${selectedEquipment.id}/${fileName}`;
-  
-      const { error: uploadError } = await supabase.storage
-        .from('equipment-images')
-        .upload(filePath, file, {
-          cacheControl: '3600',
-          upsert: false,
-        });
-  
-      if (uploadError) throw uploadError;
-  
-      const { data: { publicUrl } } = supabase.storage
-        .from('equipment-images')
-        .getPublicUrl(filePath);
-  
-      // Prevent duplicates
-      setEditFormData(prev => {
-        if (prev.equipment_images.some(img => img.image_url === publicUrl)) {
-          alert('This image is already uploaded.');
-          return prev;
-        }
-  
-        return {
-          ...prev,
-          equipment_images: [
-            ...prev.equipment_images,
-            {
-              id: fileName,
-              image_url: publicUrl,
-              is_main: prev.equipment_images.length === 0, // First image is main
-              equipment_id: selectedEquipment.id
-            }
-          ]
-        };
-      });
-  
-      alert('Image uploaded successfully!');
-      event.target.value = '';
-    } catch (error) {
-      console.error('Error uploading image:', error);
-      alert('Failed to upload image. Please try again.');
-    }
-  };
-  
-
-  const removeImage = (image_url: string) => {
-    setEditFormData(prev => ({
-      ...prev,
-      equipment_images: prev.equipment_images.filter(img => img.image_url !== image_url)
-    }));
-  };
-  
-  const [stats, setStats] = useState({
-    totalEquipment: 0,
-    activeBookings: 0,
-    totalBookings: 0,
-  });
-  const [isFilterMenuOpen, setIsFilterMenuOpen] = useState(false);
-
-  const handleEditEquipment = (equipment: Equipment) => {
-    setSelectedEquipment(equipment);
-    setSelectedEquipmentId(equipment.id);
-    setEditFormData({
-      title: equipment.title,
-      type: equipment.type,
-      description: equipment.description,
-      location: equipment.location,
-      rate: equipment.rate,
-      status: equipment.status,
-      equipment_images: equipment.equipment_images,
-      owner_id: equipment.owner_id
-    });
-    setIsEditModalOpen(true);
-  };
-
-  const handleEditFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-    setEditFormData((prev) => ({
-      ...prev,
-      [name]: name === 'rate' ? Number(value) : value,
-    }));
-  };
-
-  const handleEditSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    try {
-      // First update the equipment table
-      const equipmentData = {
-        title: editFormData.title,
-        type: editFormData.type,
-        description: editFormData.description,
-        location: editFormData.location,
-        rate: editFormData.rate,
-        status: editFormData.status,
-        owner_id: editFormData.owner_id
-      };
-
-      const { error: equipmentError } = await supabase
-        .from('equipment')
-        .update(equipmentData)
-        .eq('id', selectedEquipment?.id);
-
-      if (equipmentError) throw equipmentError;
-
-      // Then update the equipment_images table
-      if (editFormData.equipment_images.length > 0) {
-        // Prepare images data without IDs for new images
-        const imagesToUpdate = editFormData.equipment_images.map(img => {
-          // Only include ID if it exists and is a valid UUID
-          const image: { id?: string; image_url: string; is_main: boolean; equipment_id: string } = {
-            image_url: img.image_url,
-            is_main: img.is_main,
-            equipment_id: selectedEquipment?.id || ''
-          };
-          if (img.id && img.id.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i)) {
-            image.id = img.id;
-          }
-          return image;
-        });
-
-        const { error: imagesError } = await supabase
-          .from('equipment_images')
-          .upsert(imagesToUpdate,{onConflict:'id'});
-
-        if (imagesError) throw imagesError;
-      }
-
-      // Update local state
-      setEquipment((prev) =>
-        prev.map((e) => (e.id === selectedEquipment?.id ? { ...e, ...editFormData } : e))
-      );
-
-      setIsEditModalOpen(false);
-      setSelectedEquipment(null);
-      setEditFormData({
-        title: '',
-        type: '',
-        description: '',
-        location: '',
-        rate: 0,
-        status: '',
-        equipment_images: [],
-        owner_id: ''
-      });
-
-      alert('Equipment updated successfully!');
-    } catch (error) {
-      console.error('Error updating equipment:', error);
-      setError('Failed to update equipment. Please try again.');
-      alert('Failed to update equipment. Please check the console for details.');
-    }
-  };
-
-  const handleCloseModal = () => {
-    setIsEditModalOpen(false);
-    setDeleteConfirmOpen(false);
-    setSelectedEquipment(null);
-    setEditFormData({
-      title: '',
-      type: '',
-      description: '',
-      location: '',
-      rate: 0,
-      status: '',
-      images: [{
-        id: '',
-        image_url: '',
-        is_main: true
-      }],
-    });
-  };
-
-  const handleDeleteClick = () => {
-    setDeleteConfirmOpen(true);
-  };
-
-  const handleDeleteConfirm = async () => {
-    try {
-      // 1. Get all images related to this equipment
-      const { data: images, error: imagesError } = await supabase
-        .from('equipment_images')
-        .select('image_url')
-        .eq('equipment_id', selectedEquipmentId);
-
-      if (imagesError) throw imagesError;
-
-      // 2. Delete all images from storage
-      if (images) {
-        for (const image of images) {
-          const path = image.image_url.split('/').slice(4).join('/'); // Extract path from URL
-          const { error: deleteError } = await supabase.storage
-            .from('equipment-images')
-            .remove([path]);
-          
-          if (deleteError) console.error('Error deleting image:', deleteError);
-        }
-      }
-
-      // 3. Delete equipment
-      const { error: deleteEquipmentError } = await supabase
-        .from('equipment')
-        .delete()
-        .eq('id', selectedEquipmentId);
-
-      if (deleteEquipmentError) throw deleteEquipmentError;
-
-      // Update local state
-      setEquipment((prev) => prev.filter((e) => e.id !== selectedEquipmentId));
-      setStats({
-        totalEquipment: equipment.length,
-        activeBookings: bookings.filter((b) => b.status === 'active').length,
-        totalBookings: bookings.length,
-      });
-
-      setDeleteConfirmOpen(false);
-      setSelectedEquipmentId('');
-      alert('Equipment and all related images deleted successfully!');
-    } catch (error) {
-      console.error('Error deleting equipment:', error);
-      alert('Failed to delete equipment. Please try again.');
-    }
-  };
-
-  const handleDeleteCancel = () => {
-    setDeleteConfirmOpen(false);
-  };
-
-  const [startDate, setStartDate] = useState<Date | null>(null);
-  const [endDate, setEndDate] = useState<Date | null>(null);
-  const [selectedStatus, setSelectedStatus] = useState<string>('all');
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     setIsLoading(true);
@@ -447,6 +164,27 @@ const OwnerDashboard = () => {
         setIsLoading(false);
       });
   }, []);
+
+  const handleSave = (updatedEquipment: Equipment) => {
+    console.log("handleSave --- " + updatedEquipment);
+    // Update local state, refetch, etc.
+    setEquipment((prevList) =>
+      prevList.map((item) =>
+        item.id === updatedEquipment.id ? updatedEquipment : item
+      )
+    );
+    setSelectedEquipment(null)
+    setSelectedEquipmentId('');
+    console.log('Updated:', updatedEquipment);
+    alert('Equipment updated successfully!');
+  };
+
+  const handleEditEquipment = (equipment: Equipment) => {
+    setSelectedEquipment(equipment);
+    setSelectedEquipmentId(equipment.id);
+   
+    // setIsEditModalOpen(true);
+  };
 
   const handleBookingAction = async (bookingId: string, action: 'approve' | 'reject') => {
     try {
@@ -1034,204 +772,6 @@ const OwnerDashboard = () => {
       </div>
 
       {/* Equipment Edit Modal */}
-      {false && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-           <div className="bg-white w-full max-w-md rounded-lg shadow-xl p-6 relative max-h-[90vh] overflow-y-auto">
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-xl font-bold">Edit Equipment</h2>
-              <button
-                onClick={handleCloseModal}
-                className="text-gray-400 hover:text-gray-500"
-              >
-                <XCircle className="h-6 w-6" />
-              </button>
-            </div>
-
-            <div className="relative">
-              <form onSubmit={handleEditSubmit} className="space-y-6">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">Title</label>
-                    <input
-                      type="text"
-                      name="title"
-                      value={editFormData.title}
-                      onChange={handleEditFormChange}
-                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500"
-                      required
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">Type</label>
-                    <input
-                      type="text"
-                      name="type"
-                      value={editFormData.type}
-                      onChange={handleEditFormChange}
-                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500"
-                      required
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">Description</label>
-                  <textarea
-                    name="description"
-                    value={editFormData.description}
-                    onChange={handleEditFormChange}
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500"
-                    rows={4}
-                  />
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">Location</label>
-                    <input
-                      type="text"
-                      name="location"
-                      value={editFormData.location}
-                      onChange={handleEditFormChange}
-                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">Rate per day</label>
-                    <div className="flex items-center">
-                      <input
-                        type="number"
-                        name="rate"
-                        value={editFormData.rate}
-                        onChange={handleEditFormChange}
-                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500"
-                        required
-                      />
-                      <span className="ml-2 text-gray-500">R</span>
-                    </div>
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">Status</label>
-                  <select
-                    name="status"
-                    value={editFormData.status}
-                    onChange={handleEditFormChange}
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500"
-                  >
-                    <option value="available">Available</option>
-                    <option value="inactive">Inactive</option>
-                    <option value="maintenance">Maintenance</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">Images</label>
-                  <div className="mt-2 space-y-4">
-                    {/* Existing Images */}
-                    <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-                      {Array.isArray(editFormData.equipment_images) && editFormData.equipment_images.length > 0 && editFormData.equipment_images.map((image) => (
-                        
-                        <div key={image.id} className="relative">
-                          
-                          <img
-                            src={image.image_url}
-                            alt="Equipment"
-                            className="w-full h-32 object-cover rounded-lg"
-                          /> 
-                          <button type='button'
-                            onClick={() => handleImageDelete(image.image_url)}
-                            className="absolute -top-2 -right-2 bg-white rounded-full p-1 shadow-lg hover:bg-gray-100"
-                          >
-                            <XCircle className="h-4 w-4 text-red-500" />
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-
-                    {/* Image Upload */}
-                    <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center">
-                      <label className="cursor-pointer">
-                        <div className="flex flex-col items-center justify-center space-y-2">
-                          <Plus className="h-6 w-6 text-gray-400" />
-                          <span className="text-sm text-gray-600">
-                            Click or drag and drop to upload images
-                          </span>
-                        </div>
-                        <input
-                          type="file"
-                          accept="image/*"
-                          onChange={handleImageUpload}
-                          className="hidden"
-                        />
-                      </label>
-                    </div>
-                  </div>
-                </div>
-
-                {deleteConfirmOpen && (
-                  <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-4">
-                    <div className="flex">
-                      <div className="flex-shrink-0">
-                        <AlertTriangle className="h-5 w-5 text-yellow-400" />
-                      </div>
-                      <div className="ml-3">
-                        <h3 className="text-sm font-medium text-yellow-800">
-                          Confirm Delete
-                        </h3>
-                        <div className="mt-2 text-sm text-yellow-700">
-                          <p>Are you sure you want to delete this equipment? This action cannot be undone.</p>
-                        </div>
-                        <div className="mt-4 flex space-x-4">
-                          <button
-                            onClick={handleDeleteConfirm}
-                            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
-                          >
-                            Delete
-                          </button>
-                          <button
-                            onClick={handleDeleteCancel}
-                            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500"
-                          >
-                            Cancel
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                <div className="flex justify-end space-x-3 mt-6">
-                  <button
-                    type="button"
-                    onClick={handleCloseModal}
-                    className="px-4 py-2 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    className="px-4 py-2 bg-blue-900 text-white rounded-lg hover:bg-blue-800"
-                  >
-                    Save Changes
-                  </button>
-                </div>
-              </form>
-
-              <div className="absolute left-4 top-[calc(100%-2rem)]">
-                <button
-                  type="button"
-                  onClick={handleDeleteClick}
-                  className="text-red-500 hover:text-red-700"
-                >
-                  <Trash2 className="h-6 w-6" />
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
       {selectedEquipment && (
         <EquipmentEditor
           selectedEquipment={selectedEquipment}
@@ -1252,3 +792,5 @@ const OwnerDashboard = () => {
 };
 
 export default OwnerDashboard;
+
+// Add ToastContainer at the root level of your app
