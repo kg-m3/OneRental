@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Package, Calendar, Trash2, AlertTriangle, DollarSign, Clock, CheckCircle, XCircle, Plus, Settings, User, Edit, Power, Circle as CircleX, CheckCircle as CircleCheck, Eye, Calendar as CalendarIcon, MapPin, Phone, Mail, Filter } from 'lucide-react';
+import { Package, Calendar, XCircle, Plus, User, Calendar as CalendarIcon, MapPin, Phone, Filter } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
-import { format, parseISO, isWithinInterval } from 'date-fns';
+import { parseISO, isWithinInterval } from 'date-fns';
 import DatePicker from 'react-datepicker';
 import { useAuth } from '../../context/authContext';
 import EquipmentEditor from './EquipmentEditor';
@@ -54,60 +54,25 @@ interface Booking {
   };
 };
 
-interface BookingRequest {
-  id: string;
-  equipment_id: string;
-  owner_id: string;
-  start_date: string;
-  end_date: string;
-  status: string;
-  notes: string;
-  equipment: {
-    title: string;
-    image_url: string;
-  };
-  users: {
-    full_name: string;
-  };
-};
-
 const OwnerDashboard = () => {
   const { user } = useAuth();
   const [equipment, setEquipment] = useState<Equipment[]>([]);
-  const [bookingRequests, setBookingRequests] = useState<BookingRequest[]>([]);
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [activeTab, setActiveTab] = useState('equipment');
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
-  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
-  const [selectedEquipmentId, setSelectedEquipmentId] = useState('');
   const [selectedEquipment, setSelectedEquipment] = useState<Equipment | null>(null);
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [stats, setStats] = useState({
-    totalEquipment: 0,
-    activeBookings: 0,
-    totalBookings: 0,
-  });
   const [isFilterMenuOpen, setIsFilterMenuOpen] = useState(false);
   const [startDate, setStartDate] = useState<Date | null>(null);
   const [endDate, setEndDate] = useState<Date | null>(null);
   const [selectedStatus, setSelectedStatus] = useState<string>('all');
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [editFormData, setEditFormData] = useState({
-    title: '',
-    type: '',
-    description: '',
-    location: '',
-    rate: 0,
-    status: '',
-    equipment_images: [] as {
-      id?: string;
-      image_url: string;
-      is_main: boolean;
-      equipment_id: string;
-    }[],
-    owner_id: ''
+  const [stats, setStats] = useState({
+    totalEquipment: 0,
+    activeBookings: 0,
+    totalBookings: 0,
   });
+  
   
 
   useEffect(() => {
@@ -140,7 +105,6 @@ const OwnerDashboard = () => {
           throw new Error('User not found');
         }
 
-       
         const equipmentData = equipmentResult.data || [];
         const bookingsData = bookingsResult.data || [];
         console.log(equipmentData);
@@ -174,17 +138,29 @@ const OwnerDashboard = () => {
       )
     );
     setSelectedEquipment(null)
-    setSelectedEquipmentId('');
+    // setSelectedEquipmentId('');
     console.log('Updated:', updatedEquipment);
     alert('Equipment updated successfully!');
   };
 
+  const handleDelete = (deletedId: string) => {
+    const  newEquipmentList= equipment.filter(e => e.id !== deletedId);
+    setEquipment(newEquipmentList);
+    setStats({
+      ...stats,
+      totalEquipment: newEquipmentList.length,
+    });
+    setSelectedEquipment(null); // close modal
+  };
+
   const handleEditEquipment = (equipment: Equipment) => {
     setSelectedEquipment(equipment);
-    setSelectedEquipmentId(equipment.id);
+    // setSelectedEquipmentId(equipment.id);
    
     // setIsEditModalOpen(true);
   };
+
+  
 
   const handleBookingAction = async (bookingId: string, action: 'approve' | 'reject') => {
     try {
@@ -777,6 +753,7 @@ const OwnerDashboard = () => {
           selectedEquipment={selectedEquipment}
           onClose={() => setSelectedEquipment(null)}
           onSave={handleSave}
+          onDelete={handleDelete}
         />
       )}
 

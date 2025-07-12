@@ -26,9 +26,10 @@ type Props = {
   selectedEquipment: Equipment;
   onClose: () => void;
   onSave: (updated: Equipment) => void;
+  onDelete?: (deletedId: string) => void;
 };
 
-const EquipmentEditor: React.FC<Props> = ({ selectedEquipment, onClose, onSave }) => {
+const EquipmentEditor: React.FC<Props> = ({ selectedEquipment, onClose, onSave, onDelete }) => {
   const [editFormData, setEditFormData] = useState<Equipment>({ ...selectedEquipment });
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -102,9 +103,6 @@ const EquipmentEditor: React.FC<Props> = ({ selectedEquipment, onClose, onSave }
     console.log(editFormData.equipment_images);
   };
 
-  const isUUID = (value: string) =>
-    /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value);
-
   const handleEditSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
@@ -161,6 +159,59 @@ const EquipmentEditor: React.FC<Props> = ({ selectedEquipment, onClose, onSave }
     }
   };
 
+  const handleDeleteClick = () => {
+    setDeleteConfirmOpen(true);
+  };
+
+  
+  const handleDeleteConfirm = async () => {
+    try {
+      // 1. Get all images related to this equipment
+      const { data: images, error: imagesError } = await supabase
+        .from('equipment_images')
+        .select('image_url')
+        .eq('equipment_id', selectedEquipment.id);
+  
+      if (imagesError) throw imagesError;
+  
+      // 2. Delete all images from storage
+      if (images && images.length > 0) {
+        const filePaths = images.map((img) =>
+          img.image_url.split('/').slice(4).join('/')
+        );
+        const { error: deleteFilesError } = await supabase.storage
+          .from('equipment-images')
+          .remove(filePaths);
+  
+        if (deleteFilesError) console.error('Error deleting image files:', deleteFilesError);
+      }
+  
+      // 3. Delete all image records from DB
+      const { error: deleteImagesError } = await supabase
+        .from('equipment_images')
+        .delete()
+        .eq('equipment_id', selectedEquipment.id);
+  
+      if (deleteImagesError) throw deleteImagesError;
+  
+      // 4. Delete the equipment itself
+      const { error: deleteEquipmentError } = await supabase
+        .from('equipment')
+        .delete()
+        .eq('id', selectedEquipment.id);
+  
+      if (deleteEquipmentError) throw deleteEquipmentError;
+  
+      // 5. Alert + Close
+      alert('Equipment and all related images deleted successfully!');
+      onDelete?.(selectedEquipment.id);
+      onClose(); // Close the modal
+    } catch (error) {
+      console.error('Error deleting equipment:', error);
+      alert('Failed to delete equipment. Please try again.');
+    }
+  };
+
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-white w-full max-w-md rounded-lg shadow-xl p-6 relative max-h-[90vh] overflow-y-auto">
@@ -171,7 +222,7 @@ const EquipmentEditor: React.FC<Props> = ({ selectedEquipment, onClose, onSave }
           </button>
         </div>
 
-        <form onSubmit={handleEditSubmit} className="space-y-6">
+        <form id="editForm" onSubmit={handleEditSubmit} className="space-y-6">
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700">Title</label>
@@ -291,8 +342,17 @@ const EquipmentEditor: React.FC<Props> = ({ selectedEquipment, onClose, onSave }
           </div>
 
           {error && <p className="text-red-500 text-sm">{error}</p>}
+        </form>
 
-          <div className="flex justify-end gap-3 mt-6">
+        <div className="flex justify-between items-center gap-3 mt-6">
+          <button
+            type="button"
+            onClick={handleDeleteClick}
+            className="px-4 py-2 text-blue-900 rounded-lg hover:text-blue-800 flex items-center gap-1">
+            <Trash2 className="h-6 w-6" />
+          </button>
+
+          <div className="flex gap-3">
             <button
               type="button"
               onClick={onClose}
@@ -302,18 +362,42 @@ const EquipmentEditor: React.FC<Props> = ({ selectedEquipment, onClose, onSave }
             </button>
             <button
               type="submit"
+              form="editForm"
               className="px-4 py-2 bg-blue-900 text-white rounded-lg hover:bg-blue-800"
             >
               Save Changes
             </button>
           </div>
-        </form>
-
-        <div className="absolute left-4 top-[calc(100%-2rem)]">
-          <button type="button" className="text-red-500 hover:text-red-700">
-            <Trash2 className="h-6 w-6" />
-          </button>
         </div>
+
+        {deleteConfirmOpen && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white p-6 rounded-lg shadow-xl max-w-sm w-full">
+              <div className="flex items-center mb-4">
+                <AlertTriangle className="text-yellow-500 mr-2" />
+                <h3 className="text-lg font-semibold">Confirm Deletion</h3>
+              </div>
+              <p className="text-sm text-gray-700 mb-6">
+                Are you sure you want to delete <strong>{selectedEquipment.title}</strong> and all its images? This action cannot be undone.
+              </p>
+              <div className="flex justify-end gap-3">
+                <button
+                  onClick={() => setDeleteConfirmOpen(false)}
+                  className="px-4 py-2 bg-gray-100 text-gray-700 rounded hover:bg-gray-200"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleDeleteConfirm}
+                  className="px-4 py-2 bg-blue-900 text-white rounded hover:bg-blue-800"
+                >
+                  Delete
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
       </div>
     </div>
   );
