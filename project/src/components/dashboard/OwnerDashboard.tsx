@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Package, Calendar, XCircle, Plus, User, Calendar as CalendarIcon, MapPin, Phone, Filter } from 'lucide-react';
+import { Package, Calendar, XCircle, Plus, User, Calendar as CalendarIcon, MapPin, Phone, Filter, AlertTriangle, Upload } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { parseISO, isWithinInterval } from 'date-fns';
 import DatePicker from 'react-datepicker';
@@ -65,6 +65,8 @@ const OwnerDashboard = () => {
   const [startDate, setStartDate] = useState<Date | null>(null);
   const [endDate, setEndDate] = useState<Date | null>(null);
   const [selectedStatus, setSelectedStatus] = useState<string>('all');
+  const [showVerificationBanner, setShowVerificationBanner] = useState(false);
+  const [showVerificationModal, setShowVerificationModal] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [stats, setStats] = useState({
@@ -127,8 +129,29 @@ const OwnerDashboard = () => {
       .finally(() => {
         setIsLoading(false);
       });
+      checkVerificationStatus();
   }, []);
 
+  const checkVerificationStatus = async () => {
+      if (!user) return;
+  
+      try {
+        const { data: profile } = await supabase
+          .from('user_profiles')
+          .select('background_check_status, id_document_url, proof_of_address_url')
+          .eq('user_id', user.id)
+          .single();
+  
+        if (profile && profile.background_check_status === 'pending' && 
+            (!profile.id_document_url || !profile.proof_of_address_url)) {
+          setShowVerificationBanner(true);
+        }
+      } catch (error) {
+        console.error('Error checking verification status:', error);
+      }
+  };
+
+  
   const handleSave = (updatedEquipment: Equipment) => {
     console.log("handleSave --- " + updatedEquipment);
     // Update local state, refetch, etc.
@@ -225,6 +248,182 @@ const OwnerDashboard = () => {
     return true;
   });
 
+
+  const VerificationBanner = ({ }) => (
+    <div className="w-full bg-amber-50 border border-amber-200 rounded-2xl px-6 py-4 shadow-sm mb-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 w-full">
+        <div className="flex items-start gap-4 flex-1 min-w-0">
+          <AlertTriangle className="h-5 w-5 text-amber-500 mt-1 shrink-0" />
+          <div className="min-w-0">
+            <h4 className="text-amber-800 font-semibold text-base leading-snug">
+              Complete Your Verification
+            </h4>
+            <p className="text-amber-700 text-sm mt-1 whitespace-nowrap overflow-hidden text-ellipsis">
+              Upload your verification documents to build trust with renters and unlock full platform features.
+            </p>
+          </div>
+        </div>
+        <div className="w-full sm:w-auto">
+          <button
+            onClick={() => setShowVerificationModal(true)}
+            className="w-full sm:w-auto px-4 py-2 bg-blue-900 text-white text-sm font-medium rounded-xl shadow-sm hover:bg-blue-800 transition"
+          >
+            Upload Documents
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+  
+  
+  
+
+  const VerificationModal = () => {
+      const [documents, setDocuments] = useState({
+        idDocument: null as File | null,
+        proofOfAddress: null as File | null,
+        companyRegistration: null as File | null,
+      });
+      const [formData, setFormData] = useState({
+        idNumber: '',
+        companyRegistrationNumber: '',
+      });
+      const [loading, setLoading] = useState(false);
+  
+      const handleFileChange = (field: string, file: File | null) => {
+        setDocuments(prev => ({ ...prev, [field]: file }));
+      };
+  
+      const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setLoading(true);
+  
+        try {
+          // Here you would upload documents and update profile
+          // For now, just close the modal and banner
+          setShowVerificationModal(false);
+          setShowVerificationBanner(false);
+          alert('Documents uploaded successfully! Your verification is being processed.');
+        } catch (error) {
+          console.error('Error uploading documents:', error);
+          alert('Error uploading documents. Please try again.');
+        } finally {
+          setLoading(false);
+        }
+      };
+  
+      return (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-center p-6 border-b">
+              <h2 className="text-xl font-bold">Complete Verification</h2>
+              <button
+                onClick={() => setShowVerificationModal(false)}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                <XCircle className="h-6 w-6" />
+              </button>
+            </div>
+  
+            <form onSubmit={handleSubmit} className="p-6 space-y-6">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  ID Number / Passport Number *
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={formData.idNumber}
+                  onChange={(e) => setFormData({ ...formData, idNumber: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-800 focus:border-blue-800"
+                  placeholder="Enter your ID or passport number"
+                />
+              </div>
+  
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Company Registration Number
+                </label>
+                <input
+                  type="text"
+                  value={formData.companyRegistrationNumber}
+                  onChange={(e) => setFormData({ ...formData, companyRegistrationNumber: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-800 focus:border-blue-800"
+                  placeholder="Enter company registration number (if applicable)"
+                />
+              </div>
+  
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  ID Document *
+                </label>
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="file"
+                    onChange={(e) => handleFileChange('idDocument', e.target.files?.[0] || null)}
+                    className="hidden"
+                    id="modal-idDocument"
+                    accept=".pdf,.jpg,.jpeg,.png"
+                    required
+                  />
+                  <label
+                    htmlFor="modal-idDocument"
+                    className="flex items-center px-4 py-2 border border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50"
+                  >
+                    <Upload className="h-5 w-5 text-gray-400 mr-2" />
+                    <span className="text-gray-600">
+                      {documents.idDocument ? documents.idDocument.name : 'Upload ID Document'}
+                    </span>
+                  </label>
+                </div>
+              </div>
+  
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Proof of Address *
+                </label>
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="file"
+                    onChange={(e) => handleFileChange('proofOfAddress', e.target.files?.[0] || null)}
+                    className="hidden"
+                    id="modal-proofOfAddress"
+                    accept=".pdf,.jpg,.jpeg,.png"
+                    required
+                  />
+                  <label
+                    htmlFor="modal-proofOfAddress"
+                    className="flex items-center px-4 py-2 border border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50"
+                  >
+                    <Upload className="h-5 w-5 text-gray-400 mr-2" />
+                    <span className="text-gray-600">
+                      {documents.proofOfAddress ? documents.proofOfAddress.name : 'Upload Proof of Address'}
+                    </span>
+                  </label>
+                </div>
+              </div>
+  
+              <div className="flex justify-end space-x-3 pt-4">
+                <button
+                  type="button"
+                  onClick={() => setShowVerificationModal(false)}
+                  className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="px-4 py-2 bg-blue-800 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-300"
+                >
+                  {loading ? 'Uploading...' : 'Submit Documents'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      );
+  };
   const BookingDetailsModal = ({ booking, onClose }) => (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
       <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full">
@@ -673,6 +872,8 @@ const OwnerDashboard = () => {
 
   return (
     <div className="container mx-auto px-4 py-8">
+
+      {showVerificationBanner && <VerificationBanner />}
       {/* Stats Overview */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
         <div className="bg-white p-6 rounded-lg shadow-md">
@@ -764,7 +965,11 @@ const OwnerDashboard = () => {
           onClose={() => setSelectedBooking(null)}
         />
       )}
+
+       {/* Verification Modal */}
+       {showVerificationModal && <VerificationModal />}
     </div>
+
   );
 };
 

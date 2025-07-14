@@ -31,7 +31,6 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         .eq('user_id', userId);
 
       if (error) throw error;
-      console.log('user roles:', roles);
       set({ userRoles: roles?.map(r => r.role) || [] });
     } catch (error) {
       console.error('Error fetching user roles:', error);
@@ -60,7 +59,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     }
   },
 
-  signUp: async (email, password, name, company_name, roles) => {
+  signUp: async (email, password, roles) => {
     try {
       set({ isLoading: true });
       const { data, error: signUpError } = await supabase.auth.signUp({
@@ -71,14 +70,16 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       if (signUpError) throw signUpError;
       if (!data.user) throw new Error('Sign up failed');
 
+      // Create basic profile - verification fields will be added later if needed
       const { error: profileError } = await supabase
         .from('user_profiles')
         .insert([{ 
           user_id: data.user.id,
           email,
-          full_name: name,
-          company_name: company_name,
-          created_at: new Date().toISOString(),
+          background_check_status: 'pending',
+          terms_accepted: true,
+          privacy_policy_accepted: true,
+          background_check_consent: true,
         }]);
 
       if (profileError) throw profileError;
