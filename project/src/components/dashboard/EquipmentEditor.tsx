@@ -34,6 +34,8 @@ const EquipmentEditor: React.FC<Props> = ({ selectedEquipment, onClose, onSave, 
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
 
   const handleEditFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -43,8 +45,30 @@ const EquipmentEditor: React.FC<Props> = ({ selectedEquipment, onClose, onSave, 
     }));
   };
 
-  const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!isDragging) setIsDragging(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+    
+    const files = e.dataTransfer.files;
+    if (files && files.length > 0) {
+      handleFileUpload(files[0]);
+    }
+  };
+
+  const handleFileUpload = async (file: File) => {
     if (!file || !selectedEquipment) return;
 
     try {
@@ -82,8 +106,6 @@ const EquipmentEditor: React.FC<Props> = ({ selectedEquipment, onClose, onSave, 
           }
         ]
       }));
-
-      event.target.value = '';
     } catch (error) {
       console.error('Upload failed:', error);
       alert('Upload failed');
@@ -92,7 +114,19 @@ const EquipmentEditor: React.FC<Props> = ({ selectedEquipment, onClose, onSave, 
     }
   };
 
-  const handleImageDelete = (id: string) => {
+  const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      await handleFileUpload(file);
+      // Reset the file input
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
+  };
+
+  const handleImageDelete = (id: string | undefined) => {
+    if (!id) return; // Handle the case where id is undefined
     console.log("handl image delete -- init");
     console.log(editFormData.equipment_images);
     setEditFormData(prev => ({
@@ -101,6 +135,38 @@ const EquipmentEditor: React.FC<Props> = ({ selectedEquipment, onClose, onSave, 
     }));
     console.log("handl image delete -- finally");
     console.log(editFormData.equipment_images);
+  };
+
+  
+  const handleSetAsMain = async (imageId: string | undefined) => {
+    try {
+      // Update all images to set is_main to false
+      const updatedImages = editFormData.equipment_images.map(img => ({
+        ...img,
+        is_main: img.id === imageId,
+      }));
+  
+      setEditFormData(prev => ({
+        ...prev,
+        equipment_images: updatedImages,
+      }));
+  
+      // Update the database
+      await supabase
+        .from('equipment_images')
+        .update({ is_main: false })
+        .eq('equipment_id', selectedEquipment.id);
+  
+      await supabase
+        .from('equipment_images')
+        .update({ is_main: true })
+        .eq('id', imageId)
+        .eq('equipment_id', selectedEquipment.id);
+  
+    } catch (error) {
+      console.error('Error setting main image:', error);
+      setError('Failed to update main image. Please try again.');
+    }
   };
 
   const handleEditSubmit = async (e: React.FormEvent) => {
@@ -301,40 +367,77 @@ const EquipmentEditor: React.FC<Props> = ({ selectedEquipment, onClose, onSave, 
 
           <div>
             <label className="block text-sm font-medium text-gray-700">Images</label>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-2">
+            <div 
+              className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-2"
+              onDragOver={handleDragOver}
+              onDragLeave={handleDragLeave}
+              onDrop={handleDrop}
+            >
               {editFormData.equipment_images.map((image) => (
-                <div key={image.id} className="relative">
+                <div key={image.id} className="relative group">
                   <img
                     src={image.image_url}
-                    alt=""
+                    alt="Equipment preview"
                     className="w-full h-32 object-cover rounded-lg"
                   />
                   <button
                     type="button"
                     onClick={() => handleImageDelete(image.id)}
-                    className="absolute -top-2 -right-2 bg-white rounded-full p-1 shadow hover:bg-gray-100"
+                    className="absolute -top-2 -right-2 bg-white rounded-full p-1 shadow hover:bg-gray-100 opacity-0 group-hover:opacity-100 transition-opacity"
+                    aria-label="Delete image"
                   >
-                    <XCircle className="h-4 w-4 text-red-500" />
+                    <XCircle className="h-5 w-5 text-red-500" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleSetAsMain(image.id)}
+                    className={`absolute bottom-2 left-2 px-2 py-1 text-xs rounded ${
+                      image.is_main 
+                        ? 'bg-blue-900 text-white' 
+                        : 'bg-white/90 text-gray-800 hover:bg-white'
+                    }`}
+                    aria-label={image.is_main ? 'Main image' : 'Set as main image'}
+                  >
+                    {image.is_main ? 'Main' : 'Set Main'}
                   </button>
                 </div>
               ))}
-            </div>
-
-            <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center mt-4">
-              <label className="cursor-pointer">
-                <input type="file" accept="image/*" onChange={handleImageUpload} className="hidden" />
+              
+              {/* Add Image Tile */}
+              <div 
+                className={`border-2 ${isDragging ? 'border-blue-500 bg-blue-50' : 'border-dashed border-gray-300'} rounded-lg flex flex-col items-center justify-center cursor-pointer h-32 transition-colors`}
+                onClick={() => fileInputRef.current?.click()}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    fileInputRef.current?.click();
+                  }
+                }}
+                role="button"
+                tabIndex={0}
+                aria-label="Add image"
+                aria-busy={isUploading}
+              >
+                <input 
+                  ref={fileInputRef}
+                  type="file" 
+                  accept="image/*" 
+                  onChange={handleImageUpload} 
+                  className="hidden" 
+                  disabled={isUploading}
+                />
                 {isUploading ? (
                   <div className="flex flex-col items-center gap-1">
                     <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-900"></div>
-                    <span className="text-sm text-gray-500">Uploading...</span>
+                    <span className="text-xs text-gray-500">Uploading...</span>
                   </div>
                 ) : (
                   <div className="flex flex-col items-center gap-1">
                     <Plus className="h-6 w-6 text-gray-400" />
-                    <span className="text-sm text-gray-600">Click to upload</span>
+                    <span className="text-sm text-gray-600">Add image</span>
                   </div>
                 )}
-              </label>
+              </div>
             </div>
           </div>
 
