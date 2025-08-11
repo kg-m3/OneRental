@@ -1,12 +1,19 @@
-import useOwnerDashboard from './OwnerDashboard/useOwnerDashboard';
 import EquipmentEditor from './EquipmentEditor';
 import StatsOverview from './OwnerDashboard/StatsOverview';
 import EquipmentList from './OwnerDashboard/EquipmentList';
 import RentalRequests from './OwnerDashboard/RentalRequests';
 import BookingDetailsModal from './OwnerDashboard/BookingDetailsModal';
+import StatusModal from './OwnerDashboard/StatusModal';
 import VerificationModal from './OwnerDashboard/VerificationModal';
 import VerificationBanner from './OwnerDashboard/VerificationBanner';
 import Calendar from './OwnerDashboard/Calendar';
+import useOwnerDashboard from './OwnerDashboard/useOwnerDashboard';
+
+type StatusModalState = {
+  isOpen: boolean;
+  status: 'success' | 'error';
+  message: string;
+};
 
 const OwnerDashboard = () => {
   const {
@@ -35,7 +42,11 @@ const OwnerDashboard = () => {
     currentPage,
     setCurrentPage,
     totalFilteredBookings,
-    bookingsPerPage
+    bookingsPerPage,
+    approveBooking,
+    rejectBooking,
+    statusModal,
+    setStatusModal
   } = useOwnerDashboard();
 
   const renderTabContent = () => {
@@ -65,7 +76,24 @@ const OwnerDashboard = () => {
       case 'equipment':
         return <EquipmentList equipment={equipment} onEdit={setSelectedEquipment} />;
       case 'requests':
-        return <RentalRequests selectedStatus={selectedStatus} setSelectedStatus={setSelectedStatus} startDate={startDate} setStartDate={setStartDate} endDate={endDate} setEndDate={setEndDate} currentPage={currentPage} setCurrentPage={setCurrentPage} totalFilteredBookings={totalFilteredBookings} bookingsPerPage={bookingsPerPage} bookings={bookings} onSelectBooking={setSelectedBooking} />;
+        return (
+          <RentalRequests 
+            selectedStatus={selectedStatus} 
+            setSelectedStatus={setSelectedStatus} 
+            startDate={startDate} 
+            setStartDate={setStartDate} 
+            endDate={endDate} 
+            setEndDate={setEndDate} 
+            currentPage={currentPage} 
+            setCurrentPage={setCurrentPage} 
+            totalFilteredBookings={totalFilteredBookings} 
+            bookingsPerPage={bookingsPerPage} 
+            bookings={bookings} 
+            onSelectBooking={setSelectedBooking}
+            approveBooking={approveBooking}
+            rejectBooking={rejectBooking}
+          />
+        );
       case 'calendar':
         return <Calendar equipment={equipment} />;
       default:
@@ -111,10 +139,20 @@ const OwnerDashboard = () => {
         <BookingDetailsModal
           booking={selectedBooking}
           onClose={() => setSelectedBooking(null)}
+          onApprove={approveBooking}
+          onReject={rejectBooking}
         />
       )}
 
       {showVerificationModal && <VerificationModal onClose={() => setShowVerificationModal(false)} />}
+      
+      <StatusModal
+        isOpen={statusModal.isOpen}
+        onClose={() => setStatusModal((prev: StatusModalState) => ({ ...prev, isOpen: false }))}
+        status={statusModal.status}
+        message={statusModal.message}
+        duration={3000}
+      />
     </div>
   );
 };

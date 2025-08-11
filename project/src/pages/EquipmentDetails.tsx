@@ -6,7 +6,6 @@ import Slider from 'react-slick';
 import 'slick-carousel/slick/slick.css';
 import 'slick-carousel/slick/slick-theme.css';
 import '../styles/slider.css';
-import axios from 'axios';
 
 interface Equipment {
   id: string;
@@ -26,8 +25,6 @@ interface Equipment {
     image_url: string;
     is_main: boolean;
   }[];
-  // features: string[];
-  // Add other equipment properties as needed
 };
 
 interface BookingData {
@@ -36,49 +33,32 @@ interface BookingData {
   notes: string;
 }
 
-interface BookingRequest {
-  id: string;
-  equipment_id: string;
-  renter_id: string;
-  owner_id: string;
-  start_date: string;
-  end_date: string;
-  status: 'pending' | 'accepted' | 'rejected';
-  notes: string;
-  created_at: string;
-}
-
 const EquipmentDetails = () => {
   const navigate = useNavigate();
   const { id } = useParams();
+
   const [showBookingModal, setShowBookingModal] = useState(false);
   const [showLoginModal, setShowLoginModal] = useState(false);
-  const [showPaymentModal, setShowPaymentModal] = useState(false);
+
   const [authState, setAuthState] = useState<'checking' | 'authenticated' | 'unauthenticated'>('checking');
   const [user, setUser] = useState<any>(null);
+
   const [bookingData, setBookingData] = useState<BookingData>({
     startDate: '',
     endDate: '',
     notes: ''
   });
+
   const [equipment, setEquipment] = useState<Equipment | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
   const [duration, setDuration] = useState(0);
   const [totalAmount, setTotalAmount] = useState(0);
-  const [bookingId, setBookingId] = useState<string | null>(null);
-  const [paymentStatus, setPaymentStatus] = useState<'pending' | 'success' | 'failed'>('pending');
 
-  const [images, setImages] = useState<string[]>([]);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
-  useEffect(() => {
-    // Reset current index when images change
-    setCurrentImageIndex(0);
-  }, [images]);
-
-  // Get images from equipment object
+  // Images from equipment object
   const imagesToShow = equipment?.images?.map(img => img.image_url) || [];
 
   const sliderSettings = {
@@ -107,74 +87,41 @@ const EquipmentDetails = () => {
     accessibility: true,
     focusOnSelect: true,
     responsive: [
-      {
-        breakpoint: 1024,
-        settings: {
-          slidesToShow: 1,
-          slidesToScroll: 1,
-          dots: true,
-          dotsClass: 'slick-dots'
-        }
-      },
-      {
-        breakpoint: 600,
-        settings: {
-          slidesToShow: 1,
-          slidesToScroll: 1,
-          dots: true,
-          dotsClass: 'slick-dots'
-        }
-      },
-      {
-        breakpoint: 480,
-        settings: {
-          slidesToShow: 1,
-          slidesToScroll: 1,
-          dots: true,
-          dotsClass: 'slick-dots'
-        }
-      }
+      { breakpoint: 1024, settings: { slidesToShow: 1, slidesToScroll: 1, dots: true, dotsClass: 'slick-dots' } },
+      { breakpoint: 600,  settings: { slidesToShow: 1, slidesToScroll: 1, dots: true, dotsClass: 'slick-dots' } },
+      { breakpoint: 480,  settings: { slidesToShow: 1, slidesToScroll: 1, dots: true, dotsClass: 'slick-dots' } }
     ]
   };
 
   useEffect(() => {
-    // Get current user
+    // Auth check
     const checkAuth = async () => {
       try {
         setAuthState('checking');
         const { data: { user }, error: authError } = await supabase.auth.getUser();
         if (authError) {
-          if (authError instanceof Error && authError.name === 'AuthSessionMissingError') {
-            console.log('No active session found');
-            setAuthState('unauthenticated');
-            return;
-          }
-          throw authError;
+          setAuthState('unauthenticated');
+          return;
         }
-
         if (!user) {
-          console.log('User not authenticated');
           setAuthState('unauthenticated');
         } else {
-          console.log('User authenticated');
-          console.log(user);
           setUser(user);
           setAuthState('authenticated');
         }
       } catch (error) {
         console.error('Error checking auth:', error);
         setAuthState('unauthenticated');
-      } finally {
-        // Add finally block to ensure proper cleanup
       }
     };
 
+    // Fetch equipment
     const fetchEquipmentDetails = async () => {
       try {
         setLoading(true);
         setError('');
-        
-        const { data: equipment, error: equipmentError } = await supabase
+
+        const { data: equipmentRow, error: equipmentError } = await supabase
           .from('equipment')
           .select('*,user_profiles!inner (id, company_name, full_name, email)')
           .eq('id', id)
@@ -183,20 +130,18 @@ const EquipmentDetails = () => {
         if (equipmentError) throw equipmentError;
 
         // Fetch images for this equipment
-        const { data: images, error: imagesError } = await supabase
+        const { data: imageRows, error: imagesError } = await supabase
           .from('equipment_images')
           .select('*')
-          .eq('equipment_id', equipment.id)
+          .eq('equipment_id', equipmentRow.id)
           .order('is_main', { ascending: false });
 
         if (imagesError) {
           console.error('Error fetching images:', imagesError);
-          setImages([]);
-        } else {
-          setImages(images);
         }
 
-        setEquipment({ ...equipment, images });
+        setEquipment({ ...equipmentRow, images: imageRows || [] });
+        setCurrentImageIndex(0);
       } catch (err) {
         setError('Failed to fetch equipment details');
         console.error(err);
@@ -206,41 +151,42 @@ const EquipmentDetails = () => {
     };
 
     checkAuth();
-    fetchEquipmentDetails();
+    if (id) fetchEquipmentDetails();
+  }, [id]);
 
-    if (equipment?.rate && duration > 0) {
-      setTotalAmount(equipment.rate * duration);
+  // Recompute totals when duration or rate changes (with a simple 5% service fee)
+  useEffect(() => {
+    if (duration > 0 && equipment?.rate) {
+      const subtotal = duration * equipment.rate;
+      const serviceFee = Math.round(subtotal * 0.05); // 5% fee (placeholder)
+      setTotalAmount(subtotal + serviceFee);
+    } else {
+      setTotalAmount(0);
     }
-  }, [id, duration, equipment?.rate]);
+  }, [duration, equipment?.rate]);
 
   const calculateDuration = (start: string, end: string) => {
     const startDate = new Date(start);
     const endDate = new Date(end);
-    const diffTime = Math.abs(endDate.getTime() - startDate.getTime());
+    const diffTime = endDate.getTime() - startDate.getTime();
     return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
   };
 
   const handleDateChange = (field: 'startDate' | 'endDate', value: string) => {
     const newBookingData = { ...bookingData, [field]: value };
     setBookingData(newBookingData);
-    
+
     if (newBookingData.startDate && newBookingData.endDate) {
-      const days = calculateDuration(
-        newBookingData.startDate,
-        newBookingData.endDate
-      );
-      setDuration(days);
-      if (equipment) {
-        setTotalAmount(days * equipment.rate);
-      } else {
-        setTotalAmount(0);
-      }
+      const days = calculateDuration(newBookingData.startDate, newBookingData.endDate);
+      setDuration(days > 0 ? days : 0);
+    } else {
+      setDuration(0);
     }
   };
 
   const handleBookingSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    
+
     if (!equipment?.id) {
       setError('Equipment not found');
       return;
@@ -251,63 +197,64 @@ const EquipmentDetails = () => {
       return;
     }
 
+    // Self-booking prevention
+    if (user?.id && equipment?.user_profiles?.id && user.id === equipment.user_profiles.id) {
+      setError("You can't book your own equipment.");
+      return;
+    }
+
+    // Validate dates
+    const start = new Date(bookingData.startDate);
+    const end = new Date(bookingData.endDate);
+    const today = new Date(); today.setHours(0, 0, 0, 0);
+
+    if (start < today) {
+      setError('Start date cannot be in the past');
+      return;
+    }
+    if (start >= end) {
+      setError('End date must be after start date');
+      return;
+    }
+    if (duration < 30) {
+      setError('Minimum booking duration is 30 days');
+      return;
+    }
+
     try {
-      // Calculate total amount
-      const days = calculateDuration(bookingData.startDate, bookingData.endDate);
-      if (days <= 0) {
-        setError('End date must be after start date');
-        return;
-      }
+      setError('');
 
-      const total = days * equipment.rate;
+      const days = duration;
+      const subtotal = days * (equipment?.rate ?? 0);
+      const serviceFee = Math.round(subtotal * 0.10); // placeholder calc
+      const total = subtotal + serviceFee;
 
-      // Insert booking request with 'pending_payment' status
-      const { data: booking, error: bookingError } = await supabase
+      const { error: bookingError } = await supabase
         .from('bookings')
         .insert([
           {
             equipment_id: equipment.id,
-            user_id: user?.id,
+            user_id: user?.id,              // renter id
             start_date: bookingData.startDate,
             end_date: bookingData.endDate,
-            // notes: bookingData.notes || '',
+            days,
+            rate_per_day: equipment.rate,
+            subtotal,
+            service_fee: serviceFee,
+            total_amount: total,
             status: 'pending',
-            total_amount: total
+            notes: bookingData.notes || null
           }
-        ])
-        .select()
-        .single();
+        ]);
 
       if (bookingError) throw bookingError;
 
-      // Store booking ID for payment processing
-      setBookingId(booking.id);
-      
-      // Show payment modal
       setShowBookingModal(false);
-      setShowPaymentModal(true);
+      alert('Booking request sent. The owner will review and respond.');
+      navigate('/dashboard'); // or navigate('/dashboard/renter/bookings')
     } catch (err: any) {
       console.error('Error booking:', err);
       setError(err.message || 'Failed to send booking request. Please try again.');
-    }
-  };
-
-  const handleFNBPayment = async () => {
-    try {
-      // Generate FNB payment request
-      const response = await axios.post('/api/fnb-payment', {
-        bookingId: bookingId,
-        amount: totalAmount,
-        userId: user?.id,
-        equipmentId: equipment?.id
-      });
-
-      // Redirect to FNB payment gateway
-      window.location.href = response.data.paymentUrl;
-    } catch (error) {
-      console.error('Payment error:', error);
-      setPaymentStatus('failed');
-      setError('Payment processing failed. Please try again.');
     }
   };
 
@@ -328,13 +275,13 @@ const EquipmentDetails = () => {
               </div>
             ) : imagesToShow.length > 0 ? (
               <div className="w-full aspect-video rounded-lg overflow-hidden relative bg-gray-100">
-                <Slider key={imagesToShow.length} {...sliderSettings} className="w-full h-full">
+                <Slider key={imagesToShow.length} {...(sliderSettings as any)} className="w-full h-full">
                   {imagesToShow.map((url, index) => (
                     <div key={index} className="w-full h-full aspect-video flex items-center justify-center">
                       <img
                         src={url}
                         alt={`${equipment?.title} ${index + 1}`}
-                        loading='lazy'
+                        loading="lazy"
                         className="w-full h-full object-contain"
                       />
                     </div>
@@ -347,19 +294,6 @@ const EquipmentDetails = () => {
               </div>
             )}
           </div>
-          {/* Features & Specifications (commented out) */}
-          {/* <div className="bg-white p-6 rounded-lg shadow-lg">
-            <h3 className="text-xl font-bold mb-4">Features & Specifications</h3>
-            <ul className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {equipment.features?.map((feature, index) => (
-                <li key={index} className="flex items-center">
-                  <Tool className="h-5 w-5 text-yellow-600 mr-2" />
-                  <span>{feature}</span>
-                </li>
-              ))}
-            </ul>
-          </div> */}
-          
 
           {/* Right Column - Details */}
           <div className="space-y-6">
@@ -388,7 +322,6 @@ const EquipmentDetails = () => {
                 </div>
                 <button
                   onClick={async () => {
-                   
                     if (authState === 'unauthenticated') {
                       setShowLoginModal(true);
                     } else {
@@ -407,14 +340,7 @@ const EquipmentDetails = () => {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="font-semibold">{equipment?.user_profiles?.company_name}</p>
-                    {/* <div className="flex items-center mt-1">
-                      <span className="text-yellow-500">★</span>
-                      <span className="ml-1">{equipment.owner.rating}</span>
-                    </div> */}
                   </div>
-                  {/* <button className="px-4 py-2 border border-blue-900 text-blue-900 rounded-lg hover:bg-blue-50 hover:text-blue-900 transition-colors">
-                    Contact
-                  </button> */}
                 </div>
               </div>
             </div>
@@ -433,10 +359,6 @@ const EquipmentDetails = () => {
                   <span className="h-2 w-2 bg-blue-900 rounded-full mr-2"></span>
                   Secure payments through our platform
                 </li>
-                {/* <li className="flex items-center">
-                  <span className="h-2 w-2 bg-yellow-600 rounded-full mr-2"></span>
-                  24/7 customer support
-                </li> */}
               </ul>
             </div>
           </div>
@@ -450,7 +372,9 @@ const EquipmentDetails = () => {
             <div className="flex justify-between items-center p-6 border-b">
               <h2 className="text-xl font-bold text-gray-800">Please Login</h2>
               <button
-                onClick={() => setShowLoginModal(false)} // Reset to loading state
+                title='Close'
+                type='button'
+                onClick={() => setShowLoginModal(false)}
                 className="text-gray-500 hover:text-gray-700"
               >
                 <X className="h-6 w-6" />
@@ -471,15 +395,6 @@ const EquipmentDetails = () => {
                 >
                   Login
                 </button>
-                {/* <button
-                  onClick={() => {
-                    setAuthState('loading'); // Reset to loading state
-                    window.location.href = '/auth';
-                  }}
-                  className="px-6 py-3 border-2 border-blue-900 text-blue-900 rounded-lg font-semibold hover:bg-blue-50 transition-colors"
-                >
-                  Create Account
-                </button> */}
               </div>
             </div>
           </div>
@@ -493,6 +408,8 @@ const EquipmentDetails = () => {
             <div className="flex justify-between items-center p-6 border-b">
               <h2 className="text-xl font-bold text-gray-800">Book Equipment</h2>
               <button
+                title='Close'
+                type='button'
                 onClick={() => setShowBookingModal(false)}
                 className="text-gray-500 hover:text-gray-700"
               >
@@ -506,12 +423,14 @@ const EquipmentDetails = () => {
                   Start Date
                 </label>
                 <input
+                  title='Start Date'
                   type="date"
                   required
                   value={bookingData.startDate}
                   onChange={(e) => {
-                    handleDateChange('startDate', e.target.value)
-                    setBookingData({ ...bookingData, startDate: e.target.value })}}
+                    handleDateChange('startDate', e.target.value);
+                    setBookingData({ ...bookingData, startDate: e.target.value });
+                  }}
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500"
                   min={new Date().toISOString().split('T')[0]}
                 />
@@ -522,12 +441,14 @@ const EquipmentDetails = () => {
                   End Date
                 </label>
                 <input
+                  title='End Date'
                   type="date"
                   required
                   value={bookingData.endDate}
                   onChange={(e) => {
-                    handleDateChange('endDate', e.target.value)
-                    setBookingData({ ...bookingData, endDate: e.target.value })}}
+                    handleDateChange('endDate', e.target.value);
+                    setBookingData({ ...bookingData, endDate: e.target.value });
+                  }}
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500"
                   min={bookingData.startDate || new Date().toISOString().split('T')[0]}
                 />
@@ -553,7 +474,7 @@ const EquipmentDetails = () => {
                       <Clock className="inline-block h-4 w-4 mr-1" />
                       Duration:
                     </span>
-                    <span className="font-medium">{duration} days</span>
+                    <span className="font-medium">{duration} day{duration !== 1 ? 's' : ''}</span>
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-gray-600">Total Amount:</span>
@@ -572,7 +493,7 @@ const EquipmentDetails = () => {
                 </div>
                 <div className="flex items-center">
                   <AlertTriangle className="h-4 w-4 text-gray-500 mr-1" />
-                  <span className="text-sm text-gray-500">Minimum booking: 1 month</span>
+                  <span className="text-sm text-gray-500">Minimum booking: 1 day</span>
                 </div>
               </div>
 
@@ -594,41 +515,10 @@ const EquipmentDetails = () => {
                   type="submit"
                   className="w-full py-3 bg-blue-900 text-white rounded-lg font-semibold hover:bg-blue-800 transition-colors"
                 >
-                  Continue to Payment
+                  Request Booking
                 </button>
               </div>
             </form>
-          </div>
-        </div>
-      )}
-
-      {/* Payment Modal */}
-      {showPaymentModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex flex-col justify-center items-center p-4 z-50">
-          <div className="bg-white rounded-lg shadow-xl max-w-md w-full">
-            <div className="flex justify-between items-center p-6 border-b">
-              <h2 className="text-xl font-bold text-gray-800">Payment</h2>
-              <button
-                onClick={() => setShowPaymentModal(false)}
-                className="text-gray-500 hover:text-gray-700"
-              >
-                <X className="h-6 w-6" />
-              </button>
-            </div>
-
-            <div className="p-6 space-y-4">
-              <p className="text-gray-600 text-center">
-                Please select a payment method to complete your booking.
-              </p>
-              <div className="flex flex-col gap-4">
-                <button
-                  onClick={handleFNBPayment}
-                  className="px-6 py-3 bg-blue-900 text-white rounded-lg font-semibold hover:bg-blue-800 transition-colors"
-                >
-                  Pay with FNB
-                </button>
-              </div>
-            </div>
           </div>
         </div>
       )}

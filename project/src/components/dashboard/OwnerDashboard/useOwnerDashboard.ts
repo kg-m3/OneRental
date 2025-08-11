@@ -60,7 +60,26 @@ const useOwnerDashboard = () => {
   const [showVerificationBanner, setShowVerificationBanner] = useState(false);
   const [showVerificationModal, setShowVerificationModal] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<String | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  type StatusModalState = {
+    isOpen: boolean;
+    status: 'success' | 'error';
+    message: string;
+  };
+
+  const [statusModal, setStatusModal] = useState<StatusModalState>({
+    isOpen: false,
+    status: 'success',
+    message: '',
+  });
+  
+  const showStatus = (status: 'success' | 'error', message: string) => {
+    setStatusModal({
+      isOpen: true,
+      status,
+      message,
+    });
+  };
   const [stats, setStats] = useState({
     totalEquipment: 0,
     activeBookings: 0,
@@ -82,37 +101,133 @@ const useOwnerDashboard = () => {
   const fetchDashboardData = async () => {
     setIsLoading(true);
     try {
-      const [equipmentRes, bookingsRes] = await Promise.all([
-        supabase
-          .from('equipment')
-          .select(`*, equipment_images!inner (id, image_url, is_main)`) // join images
-          .eq('owner_id', user.id)
-          .order('created_at', { ascending: false }),
+      // First, get all equipment owned by the user
+      const { data: ownerEquipment, error: equipmentError } = await supabase
+        .from('equipment')
+        .select('id')
+        .eq('owner_id', user.id);
 
-        supabase
-          .from('bookings')
-          .select(`
-            *,
-            user_profiles!inner (full_name, email, phone),
-            equipment!inner (title, type, equipment_images (id, image_url, is_main))
-          `)
-          .order('created_at', { ascending: false })
-      ]);
+      if (equipmentError) throw equipmentError;
 
-      const equipmentData = equipmentRes.data || [];
-      const bookingsData = bookingsRes.data || [];
+      const equipmentIds = ownerEquipment?.map(eq => eq.id) || [];
 
-      setEquipment(equipmentData);
-      setBookings(bookingsData);
+      // If owner has no equipment, set empty results
+      if (equipmentIds.length === 0) {
+        setEquipment([]);
+        setBookings([]);
+        setStats({
+          totalEquipment: 0,
+          activeBookings: 0,
+          totalBookings: 0,
+        });
+        return;
+      }
+
+      // Get equipment with images
+      const { data: equipmentData, error: equipmentImagesError } = await supabase
+        .from('equipment')
+        .select(`*, equipment_images!inner (id, image_url, is_main)`)
+        .eq('owner_id', user.id)
+        .order('created_at', { ascending: false });
+
+      if (equipmentImagesError) throw equipmentImagesError;
+
+      setEquipment(equipmentData || []);
+
+      // Get bookings only for the owner's equipment
+      console.log('Fetching bookings for equipment IDs:', equipmentIds);
+      const { data: bookingsData, error: bookingsError } = await supabase
+        .from('bookings')
+        .select(`
+          *,
+          user:user_profiles!fk_bookings_user_profiles (user_id, full_name, email, phone),
+          renter:user_profiles!fk_bookings_renter (user_id, full_name, email, phone),
+          equipment:equipment!bookings_equipment_id_fkey (
+            id, title, type,
+            equipment_images (id, image_url, is_main)
+          )
+        `)
+        .in('equipment_id', equipmentIds)
+        .order('created_at', { ascending: false });
+
+      if (bookingsError) {
+        console.error('Error fetching bookings:', {
+          error: bookingsError,
+          message: bookingsError.message,
+          details: bookingsError.details,
+          hint: bookingsError.hint,
+          code: bookingsError.code,
+        });
+        throw bookingsError;
+      }
+
+      console.log('Successfully fetched bookings:', bookingsData);
+
+      setBookings(bookingsData || []);
       setStats({
-        totalEquipment: equipmentData.length,
-        activeBookings: bookingsData.filter(b => b.status === 'active').length,
-        totalBookings: bookingsData.length
+        totalEquipment: equipmentData?.length || 0,
+        activeBookings: (bookingsData || []).filter(b => b.status === 'active').length,
+        totalBookings: bookingsData?.length || 0,
       });
     } catch (err) {
       setError('Failed to load dashboard data.');
     } finally {
       setIsLoading(false);
+    }
+  };
+
+
+
+  const updateBookingStatus = async (bookingId: string, status: 'accepted' | 'rejected'): Promise<{ success: boolean; error?: string }> => {
+    console.log('Updating booking status:', bookingId, status);
+    try {
+      const { error } = await supabase
+        .from('bookings')
+        .update({ status })
+        .eq('id', bookingId);
+
+      if (error) throw error;
+
+      // Show success message
+      showStatus('success', `Booking ${status} successfully!`);
+
+      // Refresh the bookings
+      await fetchDashboardData();
+      return { success: true };
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred';
+      console.error('Error updating booking status:', errorMessage);
+      showStatus('error', `Failed to ${status} booking. Please try again.`);
+      return { 
+        success: false, 
+        error: errorMessage 
+      };
+    }
+  };
+
+  const approveBooking = async (bookingId: string) => {
+    try {
+      await updateBookingStatus(bookingId, 'accepted');
+      return { success: true };
+    } catch (error) {
+      console.error('Error approving booking:', error);
+      return { 
+        success: false, 
+        error: error instanceof Error ? error.message : 'Failed to approve booking' 
+      };
+    }
+  };
+
+  const rejectBooking = async (bookingId: string) => {
+    try {
+      await updateBookingStatus(bookingId, 'rejected');
+      return { success: true };
+    } catch (error) {
+      console.error('Error rejecting booking:', error);
+      return { 
+        success: false, 
+        error: error instanceof Error ? error.message : 'Failed to reject booking' 
+      };
     }
   };
 
@@ -178,7 +293,6 @@ const useOwnerDashboard = () => {
     selectedBooking,
     setSelectedBooking,
     showVerificationBanner,
-    setShowVerificationBanner,
     showVerificationModal,
     setShowVerificationModal,
     handleSave,
@@ -192,7 +306,12 @@ const useOwnerDashboard = () => {
     currentPage,
     setCurrentPage,
     totalFilteredBookings: filteredBookings.length,
-    bookingsPerPage
+    bookingsPerPage,
+    approveBooking,
+    rejectBooking,
+    statusModal,
+    setStatusModal,
+    showStatus,
   };
 };
 

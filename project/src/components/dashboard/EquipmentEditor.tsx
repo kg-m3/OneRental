@@ -283,7 +283,7 @@ const EquipmentEditor: React.FC<Props> = ({ selectedEquipment, onClose, onSave, 
       <div className="bg-white w-full max-w-2xl rounded-2xl shadow-lg p-6 relative max-h-[90vh] overflow-y-auto">
         <div className="flex justify-between items-center mb-6 border-b pb-4">
           <h2 className="text-lg md:text-xl font-semibold text-gray-900">Edit Equipment</h2>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
+          <button title='Close' type='button' onClick={onClose} className="text-gray-400 hover:text-gray-600">
             <XCircle className="h-6 w-6" />
           </button>
         </div>
@@ -293,6 +293,7 @@ const EquipmentEditor: React.FC<Props> = ({ selectedEquipment, onClose, onSave, 
             <div>
               <label className="block text-sm font-medium text-gray-700">Title</label>
               <input
+                title='Title'
                 name="title"
                 type="text"
                 value={editFormData.title}
@@ -304,6 +305,7 @@ const EquipmentEditor: React.FC<Props> = ({ selectedEquipment, onClose, onSave, 
             <div>
               <label className="block text-sm font-medium text-gray-700">Type</label>
               <input
+                title='Type'
                 name="type"
                 type="text"
                 value={editFormData.type}
@@ -317,6 +319,7 @@ const EquipmentEditor: React.FC<Props> = ({ selectedEquipment, onClose, onSave, 
           <div>
             <label className="block text-sm font-medium text-gray-700">Description</label>
             <textarea
+              title='Description'
               name="description"
               value={editFormData.description}
               onChange={handleEditFormChange}
@@ -329,6 +332,7 @@ const EquipmentEditor: React.FC<Props> = ({ selectedEquipment, onClose, onSave, 
             <div>
               <label className="block text-sm font-medium text-gray-700">Location</label>
               <input
+                title='Location'
                 name="location"
                 type="text"
                 value={editFormData.location}
@@ -340,6 +344,7 @@ const EquipmentEditor: React.FC<Props> = ({ selectedEquipment, onClose, onSave, 
               <label className="block text-sm font-medium text-gray-700">Rate per day</label>
               <div className="flex items-center">
                 <input
+                  title='Rate per day'
                   name="rate"
                   type="number"
                   value={editFormData.rate}
@@ -354,6 +359,7 @@ const EquipmentEditor: React.FC<Props> = ({ selectedEquipment, onClose, onSave, 
           <div>
             <label className="block text-sm font-medium text-gray-700">Status</label>
             <select
+              title='Status'
               name="status"
               value={editFormData.status}
               onChange={handleEditFormChange}
@@ -416,9 +422,10 @@ const EquipmentEditor: React.FC<Props> = ({ selectedEquipment, onClose, onSave, 
                 role="button"
                 tabIndex={0}
                 aria-label="Add image"
-                aria-busy={isUploading}
+                // aria-busy={isUploading? true : false}
               >
                 <input 
+                  title='Add image'
                   ref={fileInputRef}
                   type="file" 
                   accept="image/*" 

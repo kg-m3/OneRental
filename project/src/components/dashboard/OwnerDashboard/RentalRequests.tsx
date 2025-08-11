@@ -15,6 +15,8 @@ interface RentalRequestsProps {
   setCurrentPage: (page: number) => void;
   totalFilteredBookings: number;
   bookingsPerPage: number;
+  approveBooking: (bookingId: string) => Promise<{ success: boolean; error?: string }>;
+  rejectBooking: (bookingId: string) => Promise<{ success: boolean; error?: string }>;
 }
 
 const RentalRequests: React.FC<RentalRequestsProps> = ({
@@ -97,7 +99,7 @@ const RentalRequests: React.FC<RentalRequestsProps> = ({
                 <td className="px-6 py-4 whitespace-nowrap">
                   <div className="flex items-center">
                     <User className="h-6 w-6 text-gray-400 mr-2" />
-                    <span>{booking.user_profiles?.full_name || booking.user_profiles?.email}</span>
+                    <span>{booking.user?.full_name || booking.user?.email}</span>
                   </div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">

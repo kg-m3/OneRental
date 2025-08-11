@@ -1,0 +1,9 @@
+{
+  "compilerOptions": {
+    "allowJs": true,
+    "lib": ["deno.window", "dom"],
+    "strict": true,
+    "target": "esnext"
+  },
+  "importMap": "./import_map.json"
+}
