@@ -141,7 +141,6 @@ const useOwnerDashboard = () => {
         .select(`
           *,
           user:user_profiles!fk_bookings_user_profiles (user_id, full_name, email, phone),
-          renter:user_profiles!fk_bookings_renter (user_id, full_name, email, phone),
           equipment:equipment!bookings_equipment_id_fkey (
             id, title, type,
             equipment_images (id, image_url, is_main)

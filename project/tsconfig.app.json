@@ -4,6 +4,7 @@
     "useDefineForClassFields": true,
     "lib": ["ES2020", "DOM", "DOM.Iterable"],
     "module": "ESNext",
+    "typeRoots": ["./node_modules/@types", "./src/types"],
     "skipLibCheck": true,
 
     /* Bundler mode */

@@ -19,7 +19,11 @@ const BookingDetailsModal: React.FC<BookingDetailsModalProps> = ({ booking, onCl
   console.log('=== BookingDetailsModal Mounted ===');
   console.log('BookingDetailsModal - booking:', booking);
   console.log('BookingDetailsModal - onClose:', onClose);
-  
+
+  // Backward compatibility: prefer payment_state; fall back to payment_status
+  const paymentState: 'unpaid' | 'pending' | 'paid' | undefined =
+    (booking as any).payment_state ?? (booking as any).payment_status;
+
   // Debug effect to log when the component mounts/unmounts
   React.useEffect(() => {
     console.log('BookingDetailsModal - Component mounted');
@@ -27,7 +31,7 @@ const BookingDetailsModal: React.FC<BookingDetailsModalProps> = ({ booking, onCl
       console.log('BookingDetailsModal - Component unmounted');
     };
   }, []);
-  
+
   // Calculate number of days
   const startDate = new Date(booking.start_date);
   const endDate = new Date(booking.end_date);
@@ -35,21 +39,19 @@ const BookingDetailsModal: React.FC<BookingDetailsModalProps> = ({ booking, onCl
 
   const handleCancelBooking = async () => {
     if (!booking?.id) return;
-    
+
     setIsCancelling(true);
     setCancelError(null);
-    
+
     try {
       const { error } = await supabase
         .from('bookings')
         .update({ status: 'cancelled' })
         .eq('id', booking.id);
-      
+
       if (error) throw error;
-      
-      // Close the modal and trigger a refresh in the parent
+
       onClose();
-      // You might want to add a success toast/notification here
       alert('Booking cancelled successfully');
     } catch (error) {
       console.error('Error cancelling booking:', error);
@@ -63,10 +65,10 @@ const BookingDetailsModal: React.FC<BookingDetailsModalProps> = ({ booking, onCl
   console.log('=== BookingDetailsModal Rendered ===');
   console.log('Booking object:', JSON.parse(JSON.stringify(booking)));
   console.log('Booking status:', booking.status);
-  console.log('Payment status:', booking.payment_status);
+  console.log('Payment state:', paymentState);
   console.log('Total amount:', booking.total_amount);
-  console.log('Renter email:', booking.renter_email);
-  
+  console.log('Renter email:', (booking as any).renter_email);
+
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-start justify-center p-4 z-50">
       <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full h-[90vh] flex flex-col">
@@ -106,15 +108,29 @@ const BookingDetailsModal: React.FC<BookingDetailsModalProps> = ({ booking, onCl
               <div className="space-y-3">
                 <p><strong>Rental Period:</strong> {days} day{days !== 1 ? 's' : ''}</p>
                 <p><strong>Total Amount:</strong> R{(booking.total_amount || 0).toFixed(2)}</p>
-                <p><strong>Status:</strong> <span className={`px-2 py-1 rounded-full text-xs ${
-                  booking.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                  booking.status === 'accepted' ? 'bg-green-100 text-green-800' :
-                  booking.status === 'rejected' ? 'bg-red-100 text-red-800' :
-                  'bg-gray-100 text-gray-800'
-                }`}>
-                  {booking.status}
-                </span></p>
-                <p><strong>Booking Date:</strong> {new Date(booking.created_at).toLocaleDateString()}</p>
+                <p>
+                  <strong>Status:</strong>{' '}
+                  <span
+                    className={`px-2 py-1 rounded-full text-xs ${
+                      booking.status === 'pending'
+                        ? 'bg-yellow-100 text-yellow-800'
+                        : booking.status === 'accepted'
+                        ? 'bg-green-100 text-green-800'
+                        : booking.status === 'active'
+                        ? 'bg-green-100 text-green-800'
+                        : booking.status === 'rejected'
+                        ? 'bg-red-100 text-red-800'
+                        : 'bg-gray-100 text-gray-800'
+                    }`}
+                  >
+                    {booking.status}
+                  </span>
+                </p>
+                <p><strong>Booking Date:</strong> {new Date(booking.created_at).toLocaleString()}</p>
+
+                {(booking as any).payment_date && (
+                  <p><strong>Payment Date:</strong> {new Date((booking as any).payment_date).toLocaleString()}</p>
+                )}
 
                 {booking.notes && (
                   <div className="pt-2 border-t mt-3">
@@ -163,7 +179,7 @@ const BookingDetailsModal: React.FC<BookingDetailsModalProps> = ({ booking, onCl
             </div>
           )}
 
-          {booking.status === 'accepted' && (booking.payment_status === undefined || booking.payment_status === 'pending') && (
+          {booking.status === 'accepted' && (paymentState === undefined || paymentState === 'pending' || paymentState === 'unpaid') && (
             <div className="mt-6 space-y-4">
               <div className="p-4 bg-blue-50 rounded-lg">
                 <h3 className="text-lg font-medium text-blue-800 mb-2">Payment Required</h3>
@@ -172,12 +188,40 @@ const BookingDetailsModal: React.FC<BookingDetailsModalProps> = ({ booking, onCl
                 </p>
                 <PayNowButton
                   bookingId={booking.id}
-                  email={booking.renter_email}
+                  email={(booking as any).renter_email}
                   amountZarCents={Math.round((booking.total_amount || 0) * 100)}
-                  onProvisionalSuccess={(reference) => {
+                  onProvisionalSuccess={async (reference) => {
                     console.log('Payment started with reference:', reference);
                     setPaymentReference(reference);
-                    setShowSuccessModal(true);
+
+                    try {
+                      const { error } = await supabase
+                        .from('bookings')
+                        .update({
+                          payment_state: 'paid',        // ✅ only payment fields from renter
+                          payment_reference: reference,  // optional but useful
+                        })
+                        .eq('id', booking.id);
+
+                      if (error) throw error;
+
+                      // Optimistic UI (DB trigger will set status='active' and payment_date)
+                      (booking as any).payment_state = 'paid';
+                      booking.status = 'active';
+                      (booking as any).payment_date = new Date().toISOString();
+
+                      setShowSuccessModal(true);
+                    } catch (error:any) {
+                      console.error('Update failed', {
+                        code: error?.code,
+                        message: error?.message,
+                        details: error?.details,
+                        hint: error?.hint,
+                      });
+                    
+                      alert('Payment succeeded, but updating the booking failed. Please refresh or contact support.');
+                      // Do NOT show success modal here
+                    }
                   }}
                   className="w-full md:w-auto"
                   label="Pay Now to Secure Booking"
@@ -186,7 +230,7 @@ const BookingDetailsModal: React.FC<BookingDetailsModalProps> = ({ booking, onCl
             </div>
           )}
 
-          {booking.status === 'accepted' && booking.payment_status === 'paid' && (
+          {(paymentState === 'paid' || booking.status === 'active') && (
             <div className="mt-6 space-y-4">
               <div className="p-4 bg-green-50 rounded-lg">
                 <div className="flex items-center">
@@ -218,14 +262,14 @@ const BookingDetailsModal: React.FC<BookingDetailsModalProps> = ({ booking, onCl
           )}
         </div>
       </div>
-      
+
       {/* Cancel Confirmation Modal */}
       {showCancelConfirm && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-xl font-semibold text-gray-900">Cancel Booking</h3>
-              <button 
+              <button
                 title="Close"
                 type="button"
                 onClick={() => setShowCancelConfirm(false)}
@@ -267,14 +311,14 @@ const BookingDetailsModal: React.FC<BookingDetailsModalProps> = ({ booking, onCl
           </div>
         </div>
       )}
-      
+
       {/* Success Modal */}
       {showSuccessModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-xl font-semibold text-green-600">Payment Successful!</h3>
-              <button 
+              <button
                 title="Close"
                 type="button"
                 onClick={() => {
@@ -297,7 +341,7 @@ const BookingDetailsModal: React.FC<BookingDetailsModalProps> = ({ booking, onCl
                 Reference: {paymentReference}
               </p>
               <div className="pt-4 border-t mt-4">
-                <button 
+                <button
                   type="button"
                   onClick={() => {
                     setShowSuccessModal(false);

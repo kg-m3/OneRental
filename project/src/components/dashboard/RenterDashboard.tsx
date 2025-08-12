@@ -1,23 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import {
   Calendar,
   Clock,
   CheckCircle,
   Search,
   MapPin,
-  DollarSign,
-  User,
-  Phone,
-  Mail,
-  XCircle,
-  AlertTriangle,
-  HandCoins,
 } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
-import { useMockDataStore } from '../../store/mockDataStore';
+import { useAuth } from '../../context/authContext';
 import BookingDetailsModal from './BookingDetailsModal';
-import axios from 'axios';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 
@@ -26,11 +18,12 @@ export interface Booking {
   equipment_id: string;
   renter_id: string;
   renter_email: string;
-  owner_id: string;
+  user_id: string;
   start_date: string;
   end_date: string;
   status: 'pending' | 'accepted' | 'rejected' | 'active';
-  payment_status?: 'pending' | 'paid' | 'failed' | 'refunded';
+  payment_state?: 'pending' | 'paid' | 'failed' | 'refunded' | 'unpaid';
+  payment_date?: string; 
   notes: string;
   created_at: string;
   total_amount: number;
@@ -46,20 +39,36 @@ export interface Booking {
   };
 };
 
-const RenterDashboard = () => {
+const RenterDashboard: React.FC = () => {
+  const { user, loading: authLoading } = useAuth();
+  const navigate = useNavigate();
+
+  // Redirect to login if not authenticated
+  useEffect(() => {
+    if (!authLoading && !user) {
+      navigate('/auth');
+    }
+  }, [user, authLoading, navigate]);
+
+  if (authLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-900"></div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return null; // Will be redirected by the useEffect
+  }
+
   console.log('RenterDashboard rendering...');
-  // const { bookings } = useMockDataStore();
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
   const [bookings, setBookings] = useState<Booking[]>([]);
   
   // Debug effect to track selectedBooking changes
   useEffect(() => {
     console.log('selectedBooking updated:', selectedBooking);
-  }, [selectedBooking]);
-  
-  // Debug effect for modal rendering
-  useEffect(() => {
-    console.log('Modal rendering check - selectedBooking:', selectedBooking);
   }, [selectedBooking]);
   
   const handleBookingClick = (booking: Booking) => {
@@ -79,20 +88,6 @@ const RenterDashboard = () => {
   const [error, setError] = useState('');
   const [paymentStatus, setPaymentStatus] = useState('');
 
-  const handleFNBPayment = async (booking: Booking) => {
-    try {
-      const response = await axios.post('/api/fnb-payment', {
-        bookingId: booking.id,
-        amount: booking.total_amount,
-        userId: booking.renter_id,
-        equipmentId: booking.equipment_id
-      });
-      window.location.href = response.data.paymentUrl;
-    } catch (error) {
-      setError('Payment processing failed. Please try again.');
-      setPaymentStatus('failed');
-    }
-  };
 
   useEffect(() => {
     fetchBookings();
@@ -130,6 +125,11 @@ const RenterDashboard = () => {
   }, [bookings, selectedStatus, startDate, endDate]);
 
   const fetchBookings = async () => {
+    if (!user?.id) {
+      setError('User not authenticated');
+      return;
+    }
+
     try {
       setLoading(true);
       setError('');
@@ -144,6 +144,7 @@ const RenterDashboard = () => {
           equipment_images (id, image_url, is_main)
         )
       `)
+      .eq('user_id', user?.id)
       .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -444,7 +445,7 @@ const RenterDashboard = () => {
             </div>
           ) : (
             filteredBookings.map((booking) => {
-              console.log('Rendering booking:', booking.id, 'status:', booking.status, 'payment_status:', booking.payment_status);
+              console.log('Rendering booking:', booking.id, 'status:', booking.status, 'payment_state:', booking.payment_state);
               return (
                 <div
                   key={booking.id}
