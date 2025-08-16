@@ -1,10 +1,10 @@
 import { useEffect } from 'react';
-import { CheckCircle2, XCircle } from 'lucide-react';
+import { CheckCircle2, XCircle, Info } from 'lucide-react';
 
 interface StatusModalProps {
   isOpen: boolean;
   onClose: () => void;
-  status: 'success' | 'error';
+  status: 'success' | 'error' | 'info';
   message: string;
   duration?: number;
 }
@@ -28,10 +28,12 @@ const StatusModal: React.FC<StatusModalProps> = ({
 
   if (!isOpen) return null;
 
-  const icon = status === 'success' ? (
-    <CheckCircle2 className="h-12 w-12 text-green-500" />
-  ) : (
-    <XCircle className="h-12 w-12 text-red-500" />
+  const icon = (
+    <>
+      {status === 'success' && <CheckCircle2 className="w-8 h-8 text-green-500" />}
+      {status === 'error' && <XCircle className="w-8 h-8 text-red-500" />}
+      {status === 'info' && <Info className="w-8 h-8 text-blue-500" />}
+    </>
   );
 
   return (

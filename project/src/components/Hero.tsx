@@ -39,10 +39,10 @@ const Hero = () => {
           </span>
           </span>
         </h1>
-        <p className="text-xl md:text-2xl text-gray-800 mb-10 max-w-3xl mx-auto">
+        {/* <p className="text-xl md:text-2xl text-gray-800 mb-10 max-w-3xl mx-auto">
           South Africa's premier platform connecting equipment
           owners with those who need reliable machinery
-        </p>
+        </p> */}
       </div>
 
       {/* Scroll Down Indicator */}

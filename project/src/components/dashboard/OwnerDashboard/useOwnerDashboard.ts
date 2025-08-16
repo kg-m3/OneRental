@@ -63,7 +63,7 @@ const useOwnerDashboard = () => {
   const [error, setError] = useState<string | null>(null);
   type StatusModalState = {
     isOpen: boolean;
-    status: 'success' | 'error';
+    status: 'success' | 'error' | 'info';
     message: string;
   };
 
