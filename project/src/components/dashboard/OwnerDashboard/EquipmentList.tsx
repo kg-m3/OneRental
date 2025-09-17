@@ -20,7 +20,9 @@ interface Equipment {
     }[];
 };
 
-const EquipmentList = ({ equipment, onEdit }: { equipment: Equipment[]; onEdit: (equipment: Equipment) => void }) => {
+type EquipmentPerf = { id: string; name: string; utilization: number; maintenanceDue?: string | null; status: 'ok' | 'maintenance' | 'idle' };
+
+const EquipmentList = ({ equipment, onEdit, equipmentPerf }: { equipment: Equipment[]; onEdit: (equipment: Equipment) => void; equipmentPerf?: EquipmentPerf[] }) => {
   const handleToggleStatus = async (item: Equipment) => {
     const newStatus = item.status === 'available' ? 'inactive' : 'available';
     const { error } = await supabase
@@ -34,6 +36,11 @@ const EquipmentList = ({ equipment, onEdit }: { equipment: Equipment[]; onEdit: 
       alert('Failed to update status. Please try again.');
     }
   };
+
+  // Build a quick lookup for performance by equipment id
+  const perfMap: Record<string, EquipmentPerf> = (equipmentPerf || []).reduce((acc, p) => {
+    acc[p.id] = p; return acc;
+  }, {} as Record<string, EquipmentPerf>);
 
   return (
     <div className="space-y-6">
@@ -50,6 +57,18 @@ const EquipmentList = ({ equipment, onEdit }: { equipment: Equipment[]; onEdit: 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {equipment.map((item) => {
           const mainImage = item.equipment_images?.find((i) => i.is_main)?.image_url;
+          const perf = perfMap[item.id];
+          const utilizationPct = Math.round((perf?.utilization || 0) * 100);
+          // Utilization color thresholds
+          const utilColor = utilizationPct >= 70 ? 'bg-emerald-500' : utilizationPct >= 40 ? 'bg-amber-500' : 'bg-red-500';
+          const utilTextColor = utilizationPct >= 70 ? 'text-emerald-600' : utilizationPct >= 40 ? 'text-amber-600' : 'text-red-600';
+          // Status color mapping
+          const statusDotColor = perf?.status === 'ok' ? 'bg-emerald-500' : perf?.status === 'idle' ? 'bg-amber-500' : 'bg-red-500';
+          const statusPillClass = perf?.status === 'ok'
+            ? 'bg-emerald-50 text-emerald-700'
+            : perf?.status === 'idle'
+            ? 'bg-amber-50 text-amber-700'
+            : 'bg-red-50 text-red-700';
 
           return (
             <div
@@ -61,7 +80,7 @@ const EquipmentList = ({ equipment, onEdit }: { equipment: Equipment[]; onEdit: 
                 alt={item.title}
                 className="w-full h-48 object-cover"
               />
-              <div className="p-4 flex flex-col justify-between h-full">
+              <div className="p-4 flex flex-col h-full">
                 <div className="space-y-2">
                   <div className="flex justify-between items-center">
                     <h3 className="font-semibold text-lg text-gray-900 truncate">{item.title}</h3>
@@ -77,46 +96,42 @@ const EquipmentList = ({ equipment, onEdit }: { equipment: Equipment[]; onEdit: 
                   </div>
                   <p className="text-sm text-gray-500">{item.type}</p>
                   <p className="text-green-600 font-semibold text-lg">R{item.rate}/day</p>
-                </div>
-                <div className="mt-2 flex flex-col justify-betwee gap-2">
+
+                  {/* Actions placed prominently under pricing */}
+                  <div className="mt-3 flex flex-wrap gap-2">
                     <button
-                    onClick={() => onEdit(item)}
-                    className="w-full px-3 py-2 bg-blue-900 text-white rounded-lg hover:bg-blue-800"
+                      onClick={() => onEdit(item)}
+                      className="px-3 py-1.5 text-sm bg-blue-900 text-white rounded-md hover:bg-blue-800"
                     >
-                    View e
+                      View Equipment
                     </button>
-                    <button
-                    type="button"
-                        onClick={() => {
-                        const confirm = window.confirm(
-                            `Mark equipment as ${item.status === 'available' ? 'inactive' : 'available'}?`
-                        );
-                        if (confirm) handleToggleStatus(item);
-                        }}
-                        className="w-full px-3 py-2 text-sm font-medium bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200"
-                    >
-                        {item.status === 'available' ? 'Mark Inactive' : 'Mark Active'}
-                    </button>
+                  </div>
+
+                  {/* Performance block */}
+                  {perf && (
+                    <div className="mt-3 space-y-2">
+                      <div className="flex items-center justify-between text-xs text-gray-600">
+                        <span>Utilization</span>
+                        <span className={`font-medium ${utilTextColor}`}>{utilizationPct}%</span>
+                      </div>
+                      <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+                        <div className={`h-full ${utilColor}`} style={{ width: `${utilizationPct}%` }} />
+                      </div>
+                      {/* <div className="flex items-center gap-2 text-xs">
+                        <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full ${statusPillClass}`}>
+                          <span className={`inline-block w-2 h-2 rounded-full ${statusDotColor}`} />
+                          {perf.status === 'ok' ? 'Healthy' : perf.status === 'idle' ? 'Idle' : 'Needs Maintenance'}
+                        </span>
+                        {perf.maintenanceDue && (
+                          <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-red-50 text-red-700">
+                            Maintenance due
+                          </span>
+                        )}
+                      </div> */}
+                    </div>
+                  )}
                 </div>
-                <div className="mt-4">
-                  <button
-                    onClick={() => onEdit(item)}
-                    className="w-full px-3 py-2 bg-blue-900 text-white rounded-lg hover:bg-blue-800"
-                  >
-                    View
-                  </button>
-                  <button
-                    onClick={() => {
-                      const confirm = window.confirm(
-                        `Mark equipment as ${item.status === 'available' ? 'inactive' : 'available'}?`
-                      );
-                      if (confirm) handleToggleStatus(item);
-                    }}
-                    className="w-full px-3 py-2 text-sm font-medium bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200"
-                  >
-                    {item.status === 'available' ? 'Mark Inactive' : 'Mark Active'}
-                  </button>
-                </div>
+                {/* Bottom actions removed to avoid duplication; top actions are primary */}
               </div>
             </div>
           );
