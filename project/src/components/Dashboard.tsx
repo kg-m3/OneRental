@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
 import OwnerDashboard from './dashboard/OwnerDashboard';
@@ -8,6 +8,8 @@ const Dashboard = () => {
   const navigate = useNavigate();
   const { user, userRoles, fetchUserRoles } = useAuthStore();
   const [activeRole, setActiveRole] = useState<string | null>(null);
+  // Ensure a deterministic order for role toggle buttons
+  const ROLE_ORDER = ['owner', 'renter'];
 
   useEffect(() => {
     if (!user) {
@@ -21,7 +23,8 @@ const Dashboard = () => {
       }
       
       if (userRoles && userRoles.length > 0 && !activeRole) {
-        setActiveRole(userRoles[0]);
+        const preferredRole = ROLE_ORDER.find(r => userRoles.includes(r));
+        setActiveRole(preferredRole ?? userRoles[0]);
       }
     };
 
@@ -39,7 +42,13 @@ const Dashboard = () => {
       {userRoles.length > 1 && (
         <div className="container mx-auto px-4 mb-8">
           <div className="flex justify-center space-x-4 mt-8">
-            {userRoles.map((role) => (
+            {(() => {
+              // Render roles in a stable, predictable order regardless of source order
+              const orderedUserRoles = [
+                ...ROLE_ORDER.filter(r => userRoles.includes(r)),
+                ...userRoles.filter(r => !ROLE_ORDER.includes(r)),
+              ];
+              return orderedUserRoles.map((role) => (
               <button
                 key={role}
                 onClick={() => setActiveRole(role)}
@@ -51,7 +60,8 @@ const Dashboard = () => {
               >
                 {role.charAt(0).toUpperCase() + role.slice(1)} Dashboard
               </button>
-            ))}
+              ));
+            })()}
           </div>
         </div>
       )}
