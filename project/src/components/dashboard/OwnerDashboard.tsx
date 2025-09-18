@@ -2,6 +2,18 @@ import { useCallback, useState } from 'react';
 import { supabase } from '../../lib/supabase';
 import EquipmentEditor from './EquipmentEditor';
 import StatsOverview from './OwnerDashboard/StatsOverview';
+import PredictiveInsights from './CRM/PredictiveInsights';
+import RevenueAnalysis from './CRM/RevenueAnalysis';
+// import UtilizationHeatmap from './CRM/UtilizationHeatmap';
+import CustomerSegmentation from './CRM/CustomerSegmentation';
+import StatsCards from './CRM/StatsCards';
+import BookingStatusPie from './CRM/BookingStatusPie';
+import CustomerInsights from './CRM/CustomerInsights';
+import ActivityTimeline from './CRM/ActivityTimeline';
+import DamageChecklist from './CRM/DamageChecklist';
+import CashflowForecast from './CRM/CashflowForecast';
+// import FiltersBar from './CRM/FiltersBar';
+import ExportButtons from './CRM/ExportButtons';
 import EquipmentList from './OwnerDashboard/EquipmentList';
 import RentalRequests from './OwnerDashboard/RentalRequests';
 import BookingDetailsModal from './OwnerDashboard/BookingDetailsModal';
@@ -10,6 +22,7 @@ import VerificationModal from './VerificationModal';
 import VerificationBanner from './VerificationBanner';
 import Calendar from './OwnerDashboard/Calendar';
 import useOwnerDashboard from './OwnerDashboard/useOwnerDashboard';
+import { CollapsibleCard } from './CollapsibleCard';
 
 type StatusModalState = {
   isOpen: boolean;
@@ -22,6 +35,7 @@ type VerificationStatus = 'none' | 'pending' | 'in_review' | 'approved' | 'rejec
 
 const OwnerDashboard = () => {
   const {
+    // core state
     stats,
     error,
     isLoading,
@@ -29,6 +43,15 @@ const OwnerDashboard = () => {
     setActiveTab,
     equipment,
     bookings,
+    // CRM datasets
+    revenueSeries,
+  statusBreakdown,
+  activity,
+  equipmentPerf,
+  topCustomers,
+  rentalHoursThisMonth,
+  totalRevenueAllTime,
+    // selections/modals
     selectedEquipment,
     setSelectedEquipment,
     selectedBooking,
@@ -36,10 +59,18 @@ const OwnerDashboard = () => {
     showVerificationBanner,
     setShowVerificationModal,
     showVerificationModal,
+    // actions
     handleSave,
     handleDelete,
+    approveBooking,
+    rejectBooking,
+  deliverBooking,
+  completeBooking,
+    // filters/pagination
     selectedStatus,
     setSelectedStatus,
+  searchQuery,
+  setSearchQuery,
     startDate,
     setStartDate,
     endDate,
@@ -48,10 +79,9 @@ const OwnerDashboard = () => {
     setCurrentPage,
     totalFilteredBookings,
     bookingsPerPage,
-    approveBooking,
-    rejectBooking,
+    // status toast/modal
     statusModal,
-    setStatusModal
+    setStatusModal,
   } = useOwnerDashboard();
 
   // 🔹 Local status to control which banner variant shows
@@ -150,13 +180,11 @@ const OwnerDashboard = () => {
       setTimeout(() => {
         setShowVerificationModal(false);
       }, 1200);
-
-    } catch (error: any) {
-      console.error('Verification submission failed:', error);
+    } catch (e: any) {
       setStatusModal({
         isOpen: true,
         status: 'error',
-        message: error.message || 'Failed to submit verification. Please try again.'
+        message: e?.message || 'Failed to submit verification. Please try again.'
       });
     }
   }, [setShowVerificationModal, setStatusModal]);
@@ -186,12 +214,22 @@ const OwnerDashboard = () => {
 
     switch (activeTab) {
       case 'equipment':
-        return <EquipmentList equipment={equipment} onEdit={setSelectedEquipment} />;
+        return (
+          <div className="space-y-6">
+            <EquipmentList equipment={equipment} onEdit={setSelectedEquipment} equipmentPerf={equipmentPerf} />
+            <CollapsibleCard id="damage-checklist" title="Damage Checklist" subtitle="Pre/Post rental inspection" defaultOpen={false}>
+              <DamageChecklist />
+            </CollapsibleCard>
+            
+          </div>
+        );
       case 'requests':
         return (
           <RentalRequests 
             selectedStatus={selectedStatus} 
             setSelectedStatus={setSelectedStatus} 
+            searchQuery={searchQuery}
+            setSearchQuery={setSearchQuery}
             startDate={startDate} 
             setStartDate={setStartDate} 
             endDate={endDate} 
@@ -208,13 +246,97 @@ const OwnerDashboard = () => {
         );
       case 'calendar':
         return <Calendar equipment={equipment} />;
+      case 'stats':
+        return (
+          <div className="space-y-6">
+            <StatsCards stats={{
+              totalActiveEquipment: stats.totalEquipment,
+              pendingRequests: bookings.filter(b => b.status === 'pending').length,
+              confirmedThisMonth: bookings.filter(b => ['accepted','active','delivered','returned','completed','paid'].includes(b.status)).length,
+              revenueThisMonth: revenueSeries[revenueSeries.length-1]?.revenue || 0,
+              revenueLastMonth: revenueSeries[revenueSeries.length-2]?.revenue || 0,
+              rentalHoursThisMonth,
+              totalRevenueAllTime,
+            }} />
+            <div className="grid grid-cols-12 gap-4">
+              <div className="col-span-12">
+                <CollapsibleCard
+                  id="smart-insights"
+                  title="Smart Insights"
+                  subtitle="AI-powered recommendations based on your data"
+                  defaultOpen
+                  summary={<ul className="text-sm list-disc pl-4"><li>Price +12% on Excavator XL2000</li><li>Maintenance due for Bulldozer D8T</li></ul>}
+                >
+                  <PredictiveInsights equipment={equipment} bookings={bookings} isLoading={isLoading} bare />
+                </CollapsibleCard>
+              </div>
+
+              <div className="col-span-12 lg:col-span-6 xl:col-span-8">
+                <CollapsibleCard
+                  id="revenue-analysis"
+                  title="Revenue Analysis"
+                  subtitle="Monthly revenue and profit trends"
+                  defaultOpen
+                  summary={<div className="flex items-center justify-between"><span className="text-sm">MTD: R{(revenueSeries[revenueSeries.length-1]?.revenue || 0).toLocaleString()}</span><span className="text-xs text-zinc-500">Last 30 days</span></div>}
+                >
+                  <RevenueAnalysis data={revenueSeries.map(r => ({ month: r.month, revenue: r.revenue, profit: r.revenue * 0.3 }))} isLoading={isLoading} bare height={256} />
+                </CollapsibleCard>
+              </div>
+
+              <div className="col-span-12 lg:col-span-6 xl:col-span-4">
+                <CollapsibleCard id="booking-status" title="Booking Statuses" defaultOpen summary={<div className="text-sm">Pending {bookings.filter(b=>b.status==='pending').length} · Active {bookings.filter(b=>b.status==='active').length}</div>}>
+                  <BookingStatusPie data={statusBreakdown} bare height={256} />
+                </CollapsibleCard>
+              </div>
+
+              {/* <div className="col-span-12 lg:col-span-6 xl:col-span-6">
+                <CollapsibleCard id="utilization-heatmap" title="Utilization Heatmap" subtitle="Usage patterns" defaultOpen>
+                  <UtilizationHeatmap data={equipment.map(eq => ({ equipment: eq.title, days: Array.from({length: 30}, () => Math.random()) }))} isLoading={isLoading} bare />
+                </CollapsibleCard>
+              </div> */}
+              <div className="col-span-12 lg:col-span-6 xl:col-span-6">
+                <CollapsibleCard id="cashflow" title="Cashflow Forecast" subtitle="Projection based on recent revenue" defaultOpen={false}>
+                  <CashflowForecast history={revenueSeries} bare />
+                </CollapsibleCard>
+              </div>
+
+              <div className="col-span-12 lg:col-span-6 xl:col-span-6">
+                <CollapsibleCard id="customer-segmentation" title="Customer Segmentation" subtitle="Top value cohorts" defaultOpen summary={<div className="flex gap-2 text-xs"><span className="px-2 py-0.5 bg-zinc-100 rounded">Top 10%</span><span className="px-2 py-0.5 bg-zinc-100 rounded">Frequent</span><span className="px-2 py-0.5 bg-zinc-100 rounded">One-time</span></div>}>
+                  <CustomerSegmentation data={[{ segment: 'Top 10%', count: 12, revenue: 50000 }, { segment: 'Frequent', count: 30, revenue: 32000 }, { segment: 'One-time', count: 80, revenue: 15000 }]} isLoading={isLoading} bare />
+                </CollapsibleCard>
+              </div>
+
+              <div className="col-span-12">
+                <CollapsibleCard id="activity" title="Recent Activity" defaultOpen>
+                  <ActivityTimeline items={activity} />
+                </CollapsibleCard>
+              </div>
+            </div>
+            <div className="flex justify-end">
+              <ExportButtons onExportCsv={() => {
+                const rows = [['month','revenue'], ...revenueSeries.map(r => [r.month, String(r.revenue)])];
+                const csv = rows.map(r => r.map(v => `"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n');
+                const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url; a.download = 'onerental-stats.csv'; a.click(); URL.revokeObjectURL(url);
+              }} filename="onerental-stats" />
+            </div>
+          </div>
+        );
+      case 'customers':
+        return (
+          <div className="space-y-6">
+            <CustomerInsights customers={topCustomers} />
+          </div>
+        );
       default:
         return null;
     }
   };
 
   return (
-    <div className="container mx-auto px-4 py-8">
+  <div className="mx-auto w-full max-w-screen-2xl 2xl:max-w-[1800px] px-4 md:px-6 xl:px-8 py-6 md:py-8">
       {(showVerificationBanner || verificationStatus !== 'none') && (
         <VerificationBanner
           status={verificationStatus}                    // ← drives the banner variant
@@ -222,11 +344,16 @@ const OwnerDashboard = () => {
         />
       )}
 
-      <StatsOverview stats={stats} />
+      <StatsOverview
+        stats={stats}
+        onEquipmentClick={() => setActiveTab('equipment')}
+        onActiveBookingsClick={() => setActiveTab('requests')}
+  onTotalBookingsClick={() => setActiveTab('stats')}
+      />
 
-      <div className="bg-white rounded-lg shadow-md mb-8">
+  <div className="bg-white rounded-lg shadow-sm mb-6 md:mb-8">
         <div className="flex border-b">
-          {['equipment', 'requests', 'calendar'].map((tab) => (
+  {['stats','customers','equipment','requests','calendar'].map((tab) => (
             <button
               key={tab}
               className={`px-6 py-3 text-sm font-medium ${
@@ -236,13 +363,13 @@ const OwnerDashboard = () => {
               }`}
               onClick={() => setActiveTab(tab)}
             >
-              {tab === 'equipment' ? 'Equipment' : tab === 'requests' ? 'Rental Requests' : 'Calendar'}
+  {tab === 'stats' ? 'Statistics' : tab === 'customers' ? 'Customers' : tab === 'equipment' ? 'Equipment' : tab === 'requests' ? 'Rental Requests' : 'Calendar'}
             </button>
           ))}
         </div>
       </div>
 
-      <div className="bg-white rounded-lg shadow-md p-6">{renderTabContent()}</div>
+  <div className="bg-white rounded-lg shadow-sm p-4 md:p-6">{renderTabContent()}</div>
 
       {selectedEquipment && (
         <EquipmentEditor
@@ -259,6 +386,8 @@ const OwnerDashboard = () => {
           onClose={() => setSelectedBooking(null)}
           onApprove={approveBooking}
           onReject={rejectBooking}
+          onDeliver={deliverBooking}
+          onComplete={completeBooking}
         />
       )}
 

@@ -21,7 +21,7 @@ export interface Booking {
   user_id: string;
   start_date: string;
   end_date: string;
-  status: 'pending' | 'accepted' | 'rejected' | 'active';
+  status: 'pending' | 'accepted' | 'rejected' | 'active' | 'delivered' | 'returned' | 'completed' | 'cancelled' | 'paid';
   payment_state?: 'pending' | 'paid' | 'failed' | 'refunded' | 'unpaid';
   payment_date?: string; 
   notes: string;
