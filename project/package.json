@@ -7,7 +7,7 @@
   "predev": "node scripts/copy-favicons.cjs",
   "dev": "npm run predev && vite",
   "prebuild": "node scripts/copy-favicons.cjs",
-  "build": "vite build && cp _redirects dist/",
+  "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview"
   },
