@@ -1,11 +1,13 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Calendar, MapPin, PenTool as Tool, HandCoins, Shield, ArrowLeft, X, Clock, AlertTriangle } from 'lucide-react';
+import { MapPin, HandCoins, Shield, ArrowLeft, X, Clock, AlertTriangle } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import Slider from 'react-slick';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 import 'slick-carousel/slick/slick.css';
 import 'slick-carousel/slick/slick-theme.css';
 import '../styles/slider.css';
+
 
 interface Equipment {
   id: string;
@@ -13,6 +15,7 @@ interface Equipment {
   description: string;
   rate: number;
   location: string;
+  owner_id?: string;
   user_profiles?: {
     id: string;
     company_name: string;
@@ -57,9 +60,27 @@ const EquipmentDetails = () => {
   const [totalAmount, setTotalAmount] = useState(0);
 
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const FEATURE_SUGGESTIONS = (import.meta.env.VITE_FEATURE_SUGGESTIONS || 'off').toLowerCase() === 'on';
+  const variant = useMemo(() => (Math.random() < 0.5 ? 'A' : 'B'), []);
 
   // Images from equipment object
   const imagesToShow = equipment?.images?.map(img => img.image_url) || [];
+
+  // Custom arrow components for far-end positioning
+  const Arrow = ({ style, onClick, direction }: any) => (
+    <button
+      type="button"
+      className={`absolute top-1/2 z-20 transform -translate-y-1/2 bg-white/80 hover:bg-white shadow-md rounded-full p-2 flex items-center justify-center transition-all duration-200
+        ${direction === 'left' ? 'left-2' : 'right-2'}
+        group focus:outline-none focus:ring-2 focus:ring-blue-900`
+      }
+      style={{ ...style, width: 40, height: 40 }}
+      onClick={onClick}
+      aria-label={direction === 'left' ? 'Previous image' : 'Next image'}
+    >
+      {direction === 'left' ? <ChevronLeft className="w-6 h-6 text-blue-900 group-hover:text-blue-700" /> : <ChevronRight className="w-6 h-6 text-blue-900 group-hover:text-blue-700" />}
+    </button>
+  );
 
   const sliderSettings = {
     dots: true,
@@ -68,7 +89,7 @@ const EquipmentDetails = () => {
     slidesToShow: 1,
     slidesToScroll: 1,
     autoplay: false,
-    beforeChange: (current: number, next: number) => setCurrentImageIndex(next),
+  beforeChange: (_current: number, next: number) => setCurrentImageIndex(next),
     dotsClass: 'slick-dots',
     customPaging: (i: number) => (
       <button
@@ -86,6 +107,8 @@ const EquipmentDetails = () => {
     touchMove: true,
     accessibility: true,
     focusOnSelect: true,
+    nextArrow: <Arrow direction="right" />,
+    prevArrow: <Arrow direction="left" />,
     responsive: [
       { breakpoint: 1024, settings: { slidesToShow: 1, slidesToScroll: 1, dots: true, dotsClass: 'slick-dots' } },
       { breakpoint: 600,  settings: { slidesToShow: 1, slidesToScroll: 1, dots: true, dotsClass: 'slick-dots' } },
@@ -197,8 +220,8 @@ const EquipmentDetails = () => {
       return;
     }
 
-    // Self-booking prevention
-    if (user?.id && equipment?.user_profiles?.id && user.id === equipment.user_profiles.id) {
+  // Self-booking prevention (compare against equipment.owner_id)
+  if (user?.id && equipment?.owner_id && user.id === equipment.owner_id) {
       setError("You can't book your own equipment.");
       return;
     }
@@ -216,8 +239,8 @@ const EquipmentDetails = () => {
       setError('End date must be after start date');
       return;
     }
-    if (duration < 30) {
-      setError('Minimum booking duration is 30 days');
+    if (duration < 1) {
+      setError('Minimum booking duration is 1 day');
       return;
     }
 
@@ -226,7 +249,7 @@ const EquipmentDetails = () => {
 
       const days = duration;
       const subtotal = days * (equipment?.rate ?? 0);
-      const serviceFee = Math.round(subtotal * 0.10); // placeholder calc
+  const serviceFee = Math.round(subtotal * 0.05); // align with displayed 5% service fee
       const total = subtotal + serviceFee;
 
       const { error: bookingError } = await supabase
@@ -249,8 +272,8 @@ const EquipmentDetails = () => {
 
       if (bookingError) throw bookingError;
 
-      setShowBookingModal(false);
-      alert('Booking request sent. The owner will review and respond.');
+  setShowBookingModal(false);
+  alert('Booking request sent. The owner will review and respond.');
       navigate('/dashboard'); // or navigate('/dashboard/renter/bookings')
     } catch (err: any) {
       console.error('Error booking:', err);
@@ -364,7 +387,6 @@ const EquipmentDetails = () => {
           </div>
         </div>
       </div>
-
       {/* Login Modal */}
       {showLoginModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 pt-32 z-50">
@@ -418,6 +440,11 @@ const EquipmentDetails = () => {
             </div>
 
             <form onSubmit={handleBookingSubmit} className="p-6 space-y-4 min-h-[300px] max-h-[calc(90vh-120px)] overflow-y-auto">
+              {error && (
+                <div className="bg-red-50 border border-red-200 text-red-700 rounded-lg p-3">
+                  {error}
+                </div>
+              )}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Start Date

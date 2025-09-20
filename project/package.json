@@ -4,15 +4,16 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-  "predev": "node scripts/copy-favicons.cjs",
-  "dev": "npm run predev && vite",
-  "prebuild": "node scripts/copy-favicons.cjs",
-  "build": "vite build",
+    "predev": "node scripts/copy-favicons.cjs",
+    "dev": "npm run predev && vite",
+    "prebuild": "node scripts/copy-favicons.cjs",
+    "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview"
   },
   "dependencies": {
     "@heroicons/react": "^2.2.0",
+    "@mapbox/mapbox-gl-geocoder": "^5.1.2",
     "@paystack/inline-js": "^2.22.7",
     "@supabase/supabase-js": "^2.39.7",
     "@use-gesture/react": "^10.3.1",
@@ -21,6 +22,7 @@
     "framer-motion": "^12.16.0",
     "jspdf": "^2.5.1",
     "lucide-react": "^0.344.0",
+    "mapbox-gl": "^3.15.0",
     "react": "^18.3.1",
     "react-countup": "^6.5.3",
     "react-datepicker": "^8.3.0",
