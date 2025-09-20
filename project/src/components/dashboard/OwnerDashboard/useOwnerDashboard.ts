@@ -139,7 +139,7 @@ const useOwnerDashboard = () => {
       // Get equipment with images
       const { data: equipmentData, error: equipmentImagesError } = await supabase
         .from('equipment')
-        .select(`*, equipment_images!inner (id, image_url, is_main)`)
+        .select(`*, equipment_images!left (id, image_url, is_main)`)
         .eq('owner_id', user.id)
         .order('created_at', { ascending: false });
 

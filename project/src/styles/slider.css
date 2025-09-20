@@ -132,3 +132,64 @@
   visibility: visible !important;
   position: relative;
 }
+
+/* Custom far-end arrows for gallery style */
+.slick-arrow {
+  position: absolute;
+  top: 50%;
+  z-index: 20;
+  width: 40px;
+  height: 40px;
+  background: rgba(255,255,255,0.85);
+  border-radius: 50%;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.10);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transform: translateY(-50%);
+  transition: background 0.2s, box-shadow 0.2s;
+  border: none;
+  cursor: pointer;
+}
+
+/* Place arrows outside the image area for gallery slider */
+.slick-slider {
+  position: relative;
+  padding-left: 48px;
+  padding-right: 48px;
+}
+.slick-arrow {
+  top: 50%;
+  transform: translateY(-50%);
+  /* Move arrows just outside the image area */
+  left: -32px !important;
+  right: -32px !important;
+  background: rgba(255,255,255,0.85);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.10);
+}
+.slick-arrow.slick-prev {
+  left: -100px !important;
+  right: auto;
+}
+.slick-arrow.slick-next {
+  right: -32px !important;
+  left: auto;
+}
+@media (max-width: 600px) {
+  .slick-slider {
+    padding-left: 0;
+    padding-right: 0;
+  }
+  .slick-arrow.slick-prev {
+    left: 0 !important;
+  }
+  .slick-arrow.slick-next {
+    right: 0 !important;
+  }
+}
+
+.slick-arrow svg {
+  color: #1e40af;
+  width: 28px;
+  height: 28px;
+}

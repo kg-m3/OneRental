@@ -20,6 +20,8 @@ export interface Database {
           rate: number
           owner_id: string
           status: string | null
+          latitude: number | null
+          longitude: number | null
         }
         Insert: {
           id?: string
@@ -31,6 +33,8 @@ export interface Database {
           rate: number
           owner_id: string
           status?: string | null
+          latitude?: number | null
+          longitude?: number | null
         }
         Update: {
           id?: string
@@ -42,6 +46,31 @@ export interface Database {
           rate?: number
           owner_id?: string
           status?: string | null
+          latitude?: number | null
+          longitude?: number | null
+        }
+      }
+      equipment_images: {
+        Row: {
+          id: string
+          equipment_id: string
+          image_url: string
+          is_main: boolean
+          created_at: string | null
+        }
+        Insert: {
+          id?: string
+          equipment_id: string
+          image_url: string
+          is_main?: boolean
+          created_at?: string | null
+        }
+        Update: {
+          id?: string
+          equipment_id?: string
+          image_url?: string
+          is_main?: boolean
+          created_at?: string | null
         }
       }
       bookings: {
