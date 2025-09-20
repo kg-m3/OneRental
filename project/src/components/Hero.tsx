@@ -1,4 +1,3 @@
-import React from 'react';
 import { ChevronDown } from 'lucide-react';
 
 const Hero = () => {
@@ -20,6 +19,15 @@ const Hero = () => {
         }}
       >
         <div className="absolute inset-0 bg-white opacity-30"></div>
+      </div>
+
+      {/* Brand Logo as subtle background */}
+      <div className="absolute inset-0 flex items-center justify-center pointer-events-none select-none" aria-hidden>
+        <img
+          src="/android-chrome-512x512.png"
+          alt="OneRental Logo"
+          className="opacity-10 w-[70vw] max-w-[500px] -translate-y-6"
+        />
       </div>
 
       {/* Content */}
